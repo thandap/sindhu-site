@@ -33,8 +33,17 @@ async function main() {
       brandName: "SINDHU",
       businessType: "restaurant",
       subdomain: "sindhu",
-      domain: "sindhu.com",
+      domain: "sindhuindian.com",
       isActive: true,
+      stripeAccountId: null,
+      stripeChargesEnabled: false,
+      stripePayoutsEnabled: false,
+      stripeDetailsSubmitted: false,
+      platformFeeBps: 300,
+      config: {
+        currency: "usd",
+        timezone: "America/Detroit",
+      },
     },
   });
 
@@ -49,10 +58,19 @@ async function main() {
       subdomain: "elitecaters",
       domain: "elitecaters.com",
       isActive: true,
+      stripeAccountId: null,
+      stripeChargesEnabled: false,
+      stripePayoutsEnabled: false,
+      stripeDetailsSubmitted: false,
+      platformFeeBps: 300,
+      config: {
+        currency: "usd",
+        timezone: "America/Detroit",
+      },
     },
   });
 
-  const password = await bcrypt.hash("admin123", 10);
+  const passwordHash = await bcrypt.hash("Admin@123", 10);
 
   const sindhu = await prisma.tenant.findUnique({
     where: { slug: "sindhu" },
@@ -72,7 +90,7 @@ async function main() {
     create: {
       name: "Sindhu Admin",
       email: "admin@sindhu.com",
-      passwordHash: password,
+      passwordHash,
       tenantId: sindhu.id,
       role: "admin",
       isActive: true,
@@ -85,7 +103,7 @@ async function main() {
     create: {
       name: "Elite Admin",
       email: "admin@elite.com",
-      passwordHash: password,
+      passwordHash,
       tenantId: elite.id,
       role: "admin",
       isActive: true,
@@ -93,6 +111,10 @@ async function main() {
   });
 
   console.log("Tenants and admin users seeded");
+  console.log({
+    sindhuAdmin: "admin@sindhu.com / Admin@123",
+    eliteAdmin: "admin@elite.com / Admin@123",
+  });
 }
 
 main()

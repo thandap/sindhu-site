@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { OrderStatus } from "@/lib/generated/prisma/client";
+import { OrderStatus, FulfillmentType, PaymentStatus } from "@/lib/generated/prisma/client";
 
 const ALLOWED_STATUSES = ["new", "confirmed", "preparing", "ready", "completed"] as const;
 type AllowedStatus = (typeof ALLOWED_STATUSES)[number];
@@ -12,14 +12,15 @@ function mapOrder(order: any) {
     tenantSlug: order.tenant.slug,
     customerName: order.customerName,
     customerPhone: order.customerPhone,
+    customerEmail: order.customerEmail,
     notes: order.notes,
-    total: Number(order.total),
+    total: order.totalCents / 100,
     status: order.status.toLowerCase(),
     createdAt: order.createdAt,
     items: order.items.map((item: any) => ({
       id: item.id,
       name: item.name,
-      price: `$${Number(item.price).toFixed(2)}`,
+      price: `$${(item.priceCents / 100).toFixed(2)}`,
       desc: item.desc,
       quantity: item.quantity,
       tenantSlug: order.tenant.slug,
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const { tenantSlug, customerName, customerPhone, notes, items, total } = body;
+    const { tenantSlug, customerName, customerPhone, customerEmail, notes, items } = body;
 
     if (!tenantSlug || !customerName || !customerPhone || !items?.length) {
       return NextResponse.json(
@@ -96,19 +97,24 @@ export async function POST(request: NextRequest) {
         price: string | number;
         desc?: string;
         quantity: number;
-      }) => ({
-        name: item.name,
-        price: Number(String(item.price).replace("$", "")),
-        desc: item.desc || "",
-        quantity: Number(item.quantity) || 1,
-      })
+      }) => {
+        const priceNumber = Number(String(item.price).replace("$", ""));
+        const priceCents = Math.round(priceNumber * 100);
+
+        return {
+          name: item.name,
+          priceCents,
+          desc: item.desc || "",
+          quantity: Number(item.quantity) || 1,
+        };
+      }
     );
 
-    const computedTotal = sanitizedItems.reduce(
-  (sum: number, item: { price: number; quantity: number }) =>
-    sum + item.price * item.quantity,
-  0
-);
+    const computedSubtotalCents = sanitizedItems.reduce(
+      (sum: number, item: { priceCents: number; quantity: number }) =>
+        sum + item.priceCents * item.quantity,
+      0
+    );
 
     const orderNumber = `ORD-${Date.now()}`;
 
@@ -118,8 +124,15 @@ export async function POST(request: NextRequest) {
         tenantId: tenant.id,
         customerName,
         customerPhone,
+        customerEmail: customerEmail || null,
         notes: notes || "",
-        total: computedTotal,
+        fulfillmentType: FulfillmentType.PICKUP,
+        subtotalCents: computedSubtotalCents,
+        deliveryFeeCents: 0,
+        gratuityCents: 0,
+        taxCents: 0,
+        totalCents: computedSubtotalCents,
+        paymentStatus: PaymentStatus.PENDING,
         status: OrderStatus.NEW,
         items: {
           create: sanitizedItems,

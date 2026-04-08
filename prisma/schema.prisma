@@ -8,48 +8,139 @@ datasource db {
 }
 
 model Tenant {
-  id           String      @id @default(cuid())
-  slug         String      @unique
-  name         String
-  brandName    String
-  businessType String
-  domain       String?
-  subdomain    String?
-  config       Json?
-  isActive     Boolean     @default(true)
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  id                     String      @id @default(cuid())
+  slug                   String      @unique
+  name                   String
+  brandName              String
+  businessType           String
+  domain                 String?
+  subdomain              String?
+  config                 Json?
+  isActive               Boolean     @default(true)
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
 
-  orders       Order[]
-  adminUsers   AdminUser[]
+  // Stripe Connect
+  stripeAccountId        String?
+  stripeChargesEnabled   Boolean     @default(false)
+  stripePayoutsEnabled   Boolean     @default(false)
+  stripeDetailsSubmitted Boolean     @default(false)
+  platformFeeBps         Int         @default(300)
+
+  orders                 Order[]
+  adminUsers             AdminUser[]
+  payments               Payment[]
 }
 
 model Order {
-  id            String      @id @default(cuid())
-  orderNumber   String      @unique
-  tenantId      String
-  customerName  String
-  customerPhone String
-  notes         String?
-  total         Float
-  status        OrderStatus @default(NEW)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id                    String           @id @default(cuid())
+  orderNumber           String           @unique
+  tenantId              String
 
-  tenant        Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  items         OrderItem[]
+  customerName          String
+  customerPhone         String
+  customerEmail         String?
+  notes                 String?
+
+  fulfillmentType       FulfillmentType  @default(PICKUP)
+
+  // Delivery info
+  addressLine1          String?
+  addressLine2          String?
+  city                  String?
+  state                 String?
+  zip                   String?
+  requestedDate         DateTime?
+  requestedTimeLabel    String?
+
+  // Amounts in cents
+  subtotalCents         Int
+  deliveryFeeCents      Int              @default(0)
+  gratuityCents         Int              @default(0)
+  taxCents              Int              @default(0)
+  totalCents            Int
+
+  status                OrderStatus      @default(NEW)
+  paymentStatus         PaymentStatus    @default(PENDING)
+
+  stripeSessionId       String?
+  stripePaymentIntentId String?
+
+  metadata              Json?
+
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+
+  tenant                Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  items                 OrderItem[]
+  payment               Payment?
+
+  @@index([tenantId, createdAt])
+  @@index([tenantId, status])
+  @@index([stripeSessionId])
+  @@index([stripePaymentIntentId])
 }
 
 model OrderItem {
-  id        String   @id @default(cuid())
-  orderId   String
-  name      String
-  price     Float
-  desc      String?
-  quantity  Int
-  createdAt DateTime @default(now())
+  id          String    @id @default(cuid())
+  orderId     String
+  name        String
+  priceCents  Int
+  desc        String?
+  quantity    Int
+  metadata    Json?
+  createdAt   DateTime  @default(now())
 
-  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
+
+model Payment {
+  id                    String         @id @default(cuid())
+  tenantId              String
+  orderId               String         @unique
+
+  provider              String         @default("stripe")
+  currency              String         @default("usd")
+
+  amountCents           Int
+  applicationFeeCents   Int            @default(0)
+
+  stripeSessionId       String?
+  stripePaymentIntentId String?
+  stripeChargeId        String?
+  destinationAccountId  String?
+
+  status                PaymentStatus  @default(PENDING)
+  rawPayload            Json?
+
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  tenant                Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  order                 Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+  @@index([stripeSessionId])
+  @@index([stripePaymentIntentId])
+  @@index([stripeChargeId])
+}
+
+model AdminUser {
+  id           String    @id @default(cuid())
+  tenantId     String
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         String    @default("admin")
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
 }
 
 enum OrderStatus {
@@ -58,18 +149,20 @@ enum OrderStatus {
   PREPARING
   READY
   COMPLETED
+  CANCELED
 }
 
-model AdminUser {
-  id           String   @id @default(cuid())
-  tenantId     String
-  name         String
-  email        String   @unique
-  passwordHash String
-  role         String   @default("admin")
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+enum PaymentStatus {
+  PENDING
+  REQUIRES_ACTION
+  PAID
+  FAILED
+  REFUNDED
+  CANCELED
+}
 
-  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+enum FulfillmentType {
+  PICKUP
+  DELIVERY
+  DINEIN
 }
