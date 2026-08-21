@@ -32,21 +32,30 @@ export default function Home() {
       fresh ingredients, and dishes crafted to bring family and friends together.
     </p>
 
-    <div className="mt-8 flex justify-center gap-4">
-      <a
-        href="/menu"
-        className="bg-orange-600 px-6 py-3 rounded-full font-semibold hover:bg-orange-700 transition"
-      >
-        Explore Menu
-      </a>
+    <div className="mt-8 flex flex-wrap justify-center gap-4">
+  <a
+    href="/menu"
+    className="bg-orange-600 px-6 py-3 rounded-full font-semibold hover:bg-orange-700 transition"
+  >
+    Explore Menu
+  </a>
 
-      <a
-        href="/contact"
-        className="border border-white px-6 py-3 rounded-full hover:bg-white hover:text-black"
-      >
-        Visit Us
-      </a>
-    </div>
+  <a
+    href="https://www.clover.com/online-ordering/sindhu-indian-east-lansing"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="bg-white px-6 py-3 rounded-full font-semibold text-orange-700 hover:bg-orange-50 transition"
+  >
+    Order Online
+  </a>
+
+  <a
+    href="/contact"
+    className="border border-white px-6 py-3 rounded-full hover:bg-white hover:text-black transition"
+  >
+    Visit Us
+  </a>
+</div>
   </div>
 </section>
 
@@ -211,7 +220,23 @@ export default function Home() {
     </p>
   </div>
 
-  <div className="pt-4">
+  <div className="flex flex-wrap gap-3 pt-4">
+  <a
+    href="https://www.clover.com/online-ordering/sindhu-indian-east-lansing"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="inline-block rounded-full bg-orange-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-orange-700"
+  >
+    Order Online
+  </a>
+
+  <Link
+    href="/contact"
+    className="inline-block rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+  >
+    Contact & Location
+  </Link>
+</div><div className="pt-4">
     <Link
       href="/contact"
       className="inline-block rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
