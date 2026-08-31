@@ -1,10 +1,76 @@
 import Link from "next/link";
 
+const restaurantSchema = {
+  "@context": "https://schema.org",
+  "@type": "Restaurant",
+  name: "Sindhu Indian Cuisine",
+  url: "https://www.sindhuindian.com",
+  telephone: "+1-517-351-3080",
+  image: "https://www.sindhuindian.com/images/hero.jpg",
+  servesCuisine: "Indian",
+  menu: "https://www.sindhuindian.com/menu",
+
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "4790 Hagadorn Rd #132",
+    addressLocality: "East Lansing",
+    addressRegion: "MI",
+    postalCode: "48823",
+    addressCountry: "US",
+  },
+
+  openingHoursSpecification: [
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+      ],
+      opens: "11:30",
+      closes: "14:30",
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+      ],
+      opens: "17:00",
+      closes: "21:15",
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: ["Saturday", "Sunday"],
+      opens: "12:00",
+      closes: "15:00",
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: ["Saturday", "Sunday"],
+      opens: "17:00",
+      closes: "21:15",
+    },
+  ],
+};
+
+
 
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-white text-slate-900">
+  <script
+    type="application/ld+json"
+    dangerouslySetInnerHTML={{
+      __html: JSON.stringify(restaurantSchema),
+    }}
+  />
     <section className="relative h-[80vh] flex items-center justify-center text-center text-white">
 
   {/* Background Image */}
@@ -236,14 +302,7 @@ export default function Home() {
   >
     Contact & Location
   </Link>
-</div><div className="pt-4">
-    <Link
-      href="/contact"
-      className="inline-block rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-    >
-      Contact & Location
-    </Link>
-  </div>
+</div>
 
 </div>
           </div>
