@@ -1,66 +1,22 @@
 import Link from "next/link";
-
 const restaurantSchema = {
   "@context": "https://schema.org",
   "@type": "Restaurant",
-  name: "Sindhu Indian Cuisine",
-  url: "https://www.sindhuindian.com",
-  telephone: "+1-517-351-3080",
+  name: "Sindhu Indian Cuisine — West Side",
+  url: "https://www.sindhuindian.com/#locations",
+  telephone: "+1-517-900-8469",
   image: "https://www.sindhuindian.com/images/hero.jpg",
   servesCuisine: "Indian",
-  menu: "https://www.sindhuindian.com/menu",
-
+  menu: "https://sindhu-indian-west.cloveronline.com/",
   address: {
     "@type": "PostalAddress",
-    streetAddress: "4790 Hagadorn Rd #132",
-    addressLocality: "East Lansing",
+    streetAddress: "2010 W Saginaw Street",
+    addressLocality: "Lansing",
     addressRegion: "MI",
-    postalCode: "48823",
+    postalCode: "48915",
     addressCountry: "US",
   },
-
-  openingHoursSpecification: [
-    {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: [
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-      ],
-      opens: "11:30",
-      closes: "14:30",
-    },
-    {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: [
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-      ],
-      opens: "17:00",
-      closes: "21:15",
-    },
-    {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: ["Saturday", "Sunday"],
-      opens: "12:00",
-      closes: "15:00",
-    },
-    {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: ["Saturday", "Sunday"],
-      opens: "17:00",
-      closes: "21:15",
-    },
-  ],
 };
-
-
-
 
 export default function Home() {
   return (
@@ -72,32 +28,25 @@ export default function Home() {
     }}
   />
     <section className="relative h-[80vh] flex items-center justify-center text-center text-white">
-
   {/* Background Image */}
   <div className="absolute inset-0 bg-[url('/images/hero.jpg')] bg-cover bg-center" />
-
   {/* Dark Overlay */}
   <div className="absolute inset-0 bg-black/60" />
-
   {/* Content */}
   <div className="relative z-10 px-6">
     <p className="mb-4 text-sm font-semibold uppercase tracking-[0.3em] text-orange-300">
       Authentic Indian Dining
     </p>
-
     <h1 className="text-5xl md:text-7xl font-bold tracking-widest">
       SINDHU
     </h1>
-
     <p className="mt-3 text-2xl md:text-3xl text-gray-200">
       Indian Restaurant
     </p>
-
     <p className="mt-6 max-w-2xl mx-auto text-lg text-gray-300">
       A warm, elevated dining experience with authentic Indian flavors,
       fresh ingredients, and dishes crafted to bring family and friends together.
     </p>
-
     <div className="mt-8 flex flex-wrap justify-center gap-4">
   <a
     href="/menu"
@@ -105,18 +54,14 @@ export default function Home() {
   >
     Explore Menu
   </a>
-
-  <a
-    href="https://www.clover.com/online-ordering/sindhu-indian-east-lansing"
-    target="_blank"
-    rel="noopener noreferrer"
+  <Link
+    href="#locations"
     className="bg-white px-6 py-3 rounded-full font-semibold text-orange-700 hover:bg-orange-50 transition"
   >
-    Order Online
-  </a>
-
+    Order Online — Choose Location
+  </Link>
   <a
-    href="/contact"
+    href="#locations"
     className="border border-white px-6 py-3 rounded-full hover:bg-white hover:text-black transition"
   >
     Visit Us
@@ -124,6 +69,53 @@ export default function Home() {
 </div>
   </div>
 </section>
+      <section id="locations" className="mx-auto max-w-6xl scroll-mt-8 px-6 py-16">
+        <div className="rounded-3xl bg-orange-50 px-6 py-10 md:px-12">
+          <h2 className="text-center text-3xl font-bold text-slate-900">
+            Sindhu Indian Cuisine has two locations now
+          </h2>
+          <p className="mt-4 text-center text-lg text-slate-700">
+            Please order from East or West.
+          </p>
+          <div className="mt-8 grid gap-6 md:grid-cols-2">
+            <div className="rounded-2xl bg-white p-6 shadow-md">
+              <h3 className="text-xl font-semibold">East Side — East Lansing</h3>
+              <details className="mt-5">
+                <summary className="cursor-pointer list-none rounded-full bg-orange-600 px-6 py-3 text-center font-semibold text-white transition hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-700 [&::-webkit-details-marker]:hidden">
+                  East
+                </summary>
+                <div className="mt-5 rounded-xl border border-orange-200 bg-orange-50 p-5">
+                  <p className="font-semibold text-slate-900">
+                    We are in the process of moving to
+                  </p>
+                  <address className="mt-3 not-italic leading-7 text-slate-700">
+                    2929 Hannah Blvd.<br />
+                    East Lansing, MI 48823
+                  </address>
+                </div>
+              </details>
+            </div>
+            <div className="rounded-2xl bg-white p-6 shadow-md">
+              <h3 className="text-xl font-semibold">West Side — Lansing</h3>
+              <a
+                href="https://sindhu-indian-west.cloveronline.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-5 block rounded-full bg-orange-600 px-6 py-3 text-center font-semibold text-white transition hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-700"
+              >
+                West
+              </a>
+              <address className="mt-5 not-italic leading-7 text-slate-700">
+                2010 W Saginaw Street<br />
+                Lansing, MI 48915
+              </address>
+              <a href="tel:+15179008469" className="mt-3 inline-block font-medium text-orange-700 hover:underline">
+                (517) 900-8469
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <section className="border-y border-slate-200 bg-slate-50">
         <div className="mx-auto grid max-w-6xl gap-6 px-6 py-8 text-center md:grid-cols-3">
@@ -147,7 +139,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
       <section className="mx-auto max-w-6xl px-6 py-20">
   <div className="mb-10 flex items-end justify-between gap-4">
     <div>
@@ -165,7 +156,6 @@ export default function Home() {
       View Full Menu
     </Link>
   </div>
-
   <div className="grid gap-6 md:grid-cols-3">
     <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-md transition hover:shadow-xl">
       <img
@@ -178,7 +168,6 @@ export default function Home() {
         Tender chicken in a rich tomato butter sauce with aromatic spices.
       </p>
     </div>
-
     <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md">
       <img
         src="/images/chicken-biryani.jpg"
@@ -190,7 +179,6 @@ export default function Home() {
         Fragrant basmati rice layered with spiced chicken and fresh herbs.
       </p>
     </div>
-
     <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md">
       <img
         src="/images/paneer-tikka-masala.jpg"
@@ -205,7 +193,6 @@ export default function Home() {
       </p>
     </div>
   </div>
-
   <div className="mt-8 md:hidden">
     <Link
       href="/menu"
@@ -215,7 +202,6 @@ export default function Home() {
     </Link>
   </div>
 </section>
-
       <section className="bg-slate-900 text-white">
         <div className="mx-auto grid max-w-6xl gap-10 px-6 py-20 md:grid-cols-2 md:items-center">
           <div>
@@ -240,71 +226,6 @@ export default function Home() {
               <li>Freshly prepared dishes served with care</li>
               <li>Perfect for lunch, dinner, and celebrations</li>
             </ul>
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-6 py-20">
-        <div className="rounded-3xl bg-orange-50 px-8 py-12 md:px-12">
-          <div className="grid gap-8 md:grid-cols-2 md:items-center">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-orange-700">
-                Visit Sindhu
-              </p>
-              <h2 className="mt-3 text-3xl font-bold text-slate-900">
-                Join us for a flavorful dining experience
-              </h2>
-              <p className="mt-4 text-slate-600 leading-8">
-                Enjoy authentic Indian cuisine in a warm and welcoming atmosphere.
-                Stop by for lunch, dinner, or a relaxed meal with family and friends.
-              </p>
-            </div>
-
-          <div className="space-y-4 rounded-2xl bg-white p-6 shadow-md">
-  
-  <div>
-    <p className="text-xs uppercase tracking-wide text-slate-500">Address</p>
-    <p className="font-medium text-slate-900">
-      4790 Hagadorn Rd #132<br />
-      East Lansing, MI 48823
-    </p>
-  </div>
-
-  <div>
-    <p className="text-xs uppercase tracking-wide text-slate-500">Phone</p>
-    <p className="font-medium text-slate-900">(517) 351-3080</p>
-  </div>
-
-  <div>
-    <p className="text-xs uppercase tracking-wide text-slate-500">Hours</p>
-    <p className="font-medium text-slate-900 text-sm leading-6">
-      Mon – Fri: 11:30 AM – 2:30 PM<br />
-      5:00 PM – 9:15 PM
-      <br /><br />
-      Sat – Sun: 12:00 PM – 3:00 PM<br />
-      5:00 PM – 9:15 PM
-    </p>
-  </div>
-
-  <div className="flex flex-wrap gap-3 pt-4">
-  <a
-    href="https://www.clover.com/online-ordering/sindhu-indian-east-lansing"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="inline-block rounded-full bg-orange-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-orange-700"
-  >
-    Order Online
-  </a>
-
-  <Link
-    href="/contact"
-    className="inline-block rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-  >
-    Contact & Location
-  </Link>
-</div>
-
-</div>
           </div>
         </div>
       </section>
