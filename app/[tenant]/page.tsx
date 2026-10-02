@@ -65,15 +65,29 @@ export default async function TenantHome({ params }: Props) {
                     East
                   </summary>
 
-                  <div className="mt-4 rounded-xl bg-white p-5 text-slate-900">
-                    <p className="font-semibold">
-                      We are in the process of moving to
+                  <div className="mt-5 rounded-xl border border-orange-200 bg-orange-50 p-5">
+                    <p className="font-semibold text-slate-900">
+                      We are moving from Hannah Plaza to Hannah Lofts,
+                      just a couple of blocks from Hannah Plaza!
                     </p>
-                    <address className="mt-3 not-italic leading-7">
-                      2929 Hannah Blvd.
-                      <br />
+
+                    <address className="mt-3 not-italic leading-7 text-slate-700">
+                      2929 Hannah Blvd.<br />
                       East Lansing, MI 48823
                     </address>
+
+                    <a
+                      href="https://sindhu-indian-west.cloveronline.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-4 inline-block font-semibold text-orange-700 hover:underline"
+                    >
+                      Until we open, please visit our West Side location →
+                    </a>
+
+                    <p className="mt-4 font-bold text-orange-700">
+                      East or West — Sindhu is the Best!
+                    </p>
                   </div>
                 </details>
 
