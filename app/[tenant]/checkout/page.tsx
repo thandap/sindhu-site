@@ -14,9 +14,8 @@ export default function CheckoutPage() {
 
   const tenantItems = items.filter((item) => item.tenantSlug === tenantSlug);
 
-  const total = tenantItems.reduce((sum, item) => {
-    const price = parseFloat(item.price.replace("$", ""));
-    return sum + price * item.quantity;
+  const totalCents = tenantItems.reduce((sum, item) => {
+    return sum + item.priceCents * item.quantity;
   }, 0);
 
   const [name, setName] = useState("");
@@ -47,31 +46,39 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/orders", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          tenantSlug,
-          customerName: trimmedName,
-          customerPhone: normalizedPhone,
-          notes: trimmedNotes,
-          items: tenantItems,
-        }),
-      });
+   const response = await fetch("/api/checkout", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    tenantSlug,
+    customerName: trimmedName,
+    customerPhone: normalizedPhone,
+    notes: trimmedNotes,
+    fulfillmentType: "PICKUP",
+    items: tenantItems.map((item) => ({
+      name: item.name,
+      priceCents: item.priceCents,
+      desc: item.desc,
+      quantity: item.quantity,
+    })),
+    deliveryFeeCents: 0,
+    gratuityCents: 0,
+  }),
+});
 
-      const data = await response.json();
+const data = await response.json();
+console.log("checkout response", data);
 
-      if (!response.ok || !data.success) {
-        throw new Error(data.message || "Failed to place order");
-      }
+if (!response.ok || !data.success || !data.checkoutUrl) {
+  throw new Error(data.message || "Failed to start checkout");
+}
 
-      clearCart(tenantSlug);
-      router.push(`/${tenantSlug}/order-success?order=${data.order.id}`);
+      window.location.href = data.checkoutUrl;
     } catch (error) {
       console.error(error);
-      alert("Failed to place order. Please try again.");
+      alert("Failed to start checkout. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -116,19 +123,14 @@ export default function CheckoutPage() {
                 <span>
                   {item.name} × {item.quantity}
                 </span>
-                <span>
-                  $
-                  {(
-                    parseFloat(item.price.replace("$", "")) * item.quantity
-                  ).toFixed(2)}
-                </span>
+                <span>${((item.priceCents * item.quantity) / 100).toFixed(2)}</span>
               </div>
             ))}
           </div>
 
           <div className="mt-4 flex justify-between border-t pt-4 font-semibold">
             <span>Total</span>
-            <span>${total.toFixed(2)}</span>
+            <span>${(totalCents / 100).toFixed(2)}</span>
           </div>
         </div>
 
@@ -138,7 +140,7 @@ export default function CheckoutPage() {
             disabled={loading}
             className="rounded-full bg-orange-600 px-6 py-3 text-white hover:bg-orange-700 disabled:opacity-50"
           >
-            {loading ? "Placing Order..." : "Place Order"}
+            {loading ? "Redirecting..." : "Pay Now"}
           </button>
         </div>
       </div>

@@ -7,7 +7,7 @@ export interface CartItem {
   id: string;
   tenantSlug: string;
   name: string;
-  price: string;
+  priceCents: number;
   desc: string;
   veg?: boolean;
   spicy?: boolean;
@@ -22,6 +22,7 @@ interface CartState {
   increaseQty: (id: string, tenantSlug: string) => void;
   decreaseQty: (id: string, tenantSlug: string) => void;
   getItemCount: (tenantSlug?: string) => number;
+  getCartTotalCents: (tenantSlug?: string) => number;
 }
 
 export const useCartStore = create<CartState>()(
@@ -93,9 +94,21 @@ export const useCartStore = create<CartState>()(
 
         return filtered.reduce((sum, item) => sum + item.quantity, 0);
       },
+
+      getCartTotalCents: (tenantSlug) => {
+        const items = get().items;
+        const filtered = tenantSlug
+          ? items.filter((item) => item.tenantSlug === tenantSlug)
+          : items;
+
+        return filtered.reduce(
+          (sum, item) => sum + item.priceCents * item.quantity,
+          0
+        );
+      },
     }),
     {
-      name: "resto-cart",
+      name: "resto-cart-v2",
     }
   )
 );

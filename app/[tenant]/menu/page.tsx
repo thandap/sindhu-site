@@ -1,5 +1,4 @@
 import { getTenantBySlug } from "@/lib/tenant/getTenantConfig";
-import { getMenuByTenant } from "@/lib/menu/getMenuByTenant";
 import TenantMenuClient from "@/components/menu/TenantMenuClient";
 
 type Props = {
@@ -10,6 +9,7 @@ type Props = {
 
 export default async function MenuPage({ params }: Props) {
   const { tenant: tenantSlug } = await params;
+
   const tenant = getTenantBySlug(tenantSlug);
 
   if (!tenant) {
@@ -20,14 +20,11 @@ export default async function MenuPage({ params }: Props) {
     );
   }
 
-  const menuData = getMenuByTenant(tenant.slug);
-
   return (
     <TenantMenuClient
       tenantSlug={tenant.slug}
       tenantBrandName={tenant.brandName}
       tenantSubtitle={tenant.branding.heroSubtitle}
-      menuData={menuData}
     />
   );
 }

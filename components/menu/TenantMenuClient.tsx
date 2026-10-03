@@ -1,14 +1,26 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useCartStore } from "@/lib/cart/cartStore";
-import type { MenuSection } from "@/types/menu";
+
+type MenuItem = {
+  name: string;
+  desc: string;
+  priceCents: number;
+  veg?: boolean;
+  spicy?: boolean;
+};
+
+type MenuSection = {
+  category: string;
+  items: MenuItem[];
+};
 
 type Props = {
   tenantSlug: string;
   tenantBrandName: string;
   tenantSubtitle?: string;
-  menuData: MenuSection[];
 };
 
 function makeItemId(category: string, itemName: string) {
@@ -21,10 +33,35 @@ export default function TenantMenuClient({
   tenantSlug,
   tenantBrandName,
   tenantSubtitle,
-  menuData,
 }: Props) {
   const addItem = useCartStore((state) => state.addItem);
   const items = useCartStore((state) => state.items);
+
+  const [menuData, setMenuData] = useState<MenuSection[]>([]);
+
+  useEffect(() => {
+    async function loadMenu() {
+      const res = await fetch(`/api/menu?tenant=${tenantSlug}`);
+      const data = await res.json();
+
+      if (data.success) {
+        setMenuData(
+          data.menu.map((cat: any) => ({
+            category: cat.name,
+            items: cat.items.map((item: any) => ({
+              name: item.name,
+              desc: item.description,
+              priceCents: item.priceCents,
+              veg: item.isVegetarian,
+              spicy: (item.spiceLevel || 0) > 0,
+            })),
+          }))
+        );
+      }
+    }
+
+    loadMenu();
+  }, [tenantSlug]);
 
   const cartCount = items
     .filter((item) => item.tenantSlug === tenantSlug)
@@ -48,39 +85,15 @@ export default function TenantMenuClient({
 
           <Link
             href={`/${tenantSlug}/cart`}
-            className="rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+            className="rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white"
           >
             Cart ({cartCount})
           </Link>
         </div>
 
-        <div className="sticky top-16 z-40 mb-10 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-3 shadow-md">
-          <div className="flex min-w-max gap-3">
-            {menuData.map((section) => {
-              const sectionId = section.category
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, "-");
-
-              return (
-                <a
-                  key={section.category}
-                  href={`#${sectionId}`}
-                  className="rounded-full border border-orange-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-orange-50 hover:text-orange-700"
-                >
-                  {section.category}
-                </a>
-              );
-            })}
-          </div>
-        </div>
-
         <div className="space-y-10">
           {menuData.map((section) => (
-            <section
-              key={section.category}
-              id={section.category.toLowerCase().replace(/[^a-z0-9]+/g, "-")}
-              className="scroll-mt-36"
-            >
+            <section key={section.category}>
               <h2 className="mb-4 text-2xl font-semibold text-orange-700">
                 {section.category}
               </h2>
@@ -90,52 +103,39 @@ export default function TenantMenuClient({
                   const itemId = makeItemId(section.category, item.name);
 
                   return (
-                    <div
-                      key={itemId}
-                      className="rounded-md border-b px-2 pb-4 transition hover:bg-orange-50"
-                    >
-                      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                        <div className="flex-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="text-lg font-semibold">{item.name}</h3>
-
-                            {item.veg && (
-                              <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">
-                                🟢 Veg
-                              </span>
-                            )}
-
-                            {item.spicy && (
-                              <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-700">
-                                🌶️ Spicy
-                              </span>
-                            )}
-                          </div>
-
-                          <p className="mt-1 text-sm text-gray-600">{item.desc}</p>
+                    <div key={itemId} className="border-b pb-4">
+                      <div className="flex justify-between">
+                        <div>
+                          <h3 className="font-semibold">{item.name}</h3>
+                          <p className="text-sm text-gray-600">{item.desc}</p>
                         </div>
 
-                        <div className="flex items-center gap-3 md:min-w-[180px] md:justify-end">
-                          <span className="font-semibold text-orange-600">
-                            {item.price}
-                          </span>
+                        <div className="text-right">
+                          <p className="text-orange-600 font-semibold">
+                            ${(item.priceCents / 100).toFixed(2)}
+                          </p>
 
                           <button
-                            type="button"
-                            onClick={() =>
-                              addItem({
-                                id: itemId,
-                                tenantSlug,
-                                name: item.name,
-                                price: item.price,
-                                desc: item.desc,
-                                veg: item.veg,
-                                spicy: item.spicy,
-                              })
-                            }
-                            className="rounded-full bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-700"
+                            onClick={() => {
+  console.log("adding item", {
+    id: itemId,
+    tenantSlug,
+    name: item.name,
+    priceCents: item.priceCents,
+  });
+  addItem({
+    id: itemId,
+    tenantSlug,
+    name: item.name,
+    priceCents: item.priceCents,
+    desc: item.desc,
+    veg: item.veg,
+    spicy: item.spicy,
+  });
+}}
+                            className="mt-2 rounded bg-orange-600 px-3 py-1 text-white"
                           >
-                            Add to Cart
+                            Add
                           </button>
                         </div>
                       </div>

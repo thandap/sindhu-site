@@ -20,7 +20,6 @@ model Tenant {
   createdAt              DateTime    @default(now())
   updatedAt              DateTime    @updatedAt
 
-  // Stripe Connect
   stripeAccountId        String?
   stripeChargesEnabled   Boolean     @default(false)
   stripePayoutsEnabled   Boolean     @default(false)
@@ -30,6 +29,8 @@ model Tenant {
   orders                 Order[]
   adminUsers             AdminUser[]
   payments               Payment[]
+  menuCategories         MenuCategory[]
+  menuItems              MenuItem[]
 }
 
 model Order {
@@ -165,4 +166,59 @@ enum FulfillmentType {
   PICKUP
   DELIVERY
   DINEIN
+}
+model MenuCategory {
+  id          String      @id @default(cuid())
+  tenantId    String
+  name        String
+  slug        String
+  description String?
+  image       String?
+  sortOrder   Int         @default(0)
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  items       MenuItem[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId, sortOrder])
+  @@index([tenantId, isActive])
+}
+
+model MenuItem {
+  id            String       @id @default(cuid())
+  tenantId      String
+  categoryId    String
+
+  name          String
+  slug          String
+  description   String?
+  image         String?
+  priceCents    Int
+  compareAtCents Int?
+  sku           String?
+
+  isActive      Boolean      @default(true)
+  isAvailable   Boolean      @default(true)
+  isFeatured    Boolean      @default(false)
+  isVegetarian  Boolean      @default(false)
+  isVegan       Boolean      @default(false)
+  isGlutenFree  Boolean      @default(false)
+  spiceLevel    Int?
+  sortOrder     Int          @default(0)
+
+  metadata      Json?
+
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  tenant        Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  category      MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, slug])
+  @@index([tenantId, categoryId, sortOrder])
+  @@index([tenantId, isActive, isAvailable])
+  @@index([tenantId, isFeatured])
 }

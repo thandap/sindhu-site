@@ -13,13 +13,10 @@ export default function CartPage() {
   const decreaseQty = useCartStore((state) => state.decreaseQty);
   const removeItem = useCartStore((state) => state.removeItem);
 
-  const tenantItems = items.filter(
-    (item) => item.tenantSlug === tenantSlug
-  );
+  const tenantItems = items.filter((item) => item.tenantSlug === tenantSlug);
 
-  const total = tenantItems.reduce((sum, item) => {
-    const price = parseFloat(item.price.replace("$", ""));
-    return sum + price * item.quantity;
+  const totalCents = tenantItems.reduce((sum, item) => {
+    return sum + item.priceCents * item.quantity;
   }, 0);
 
   return (
@@ -51,9 +48,7 @@ export default function CartPage() {
 
                     <div className="mt-2 flex items-center gap-2">
                       <button
-                        onClick={() =>
-                          decreaseQty(item.id, tenantSlug)
-                        }
+                        onClick={() => decreaseQty(item.id, tenantSlug)}
                         className="px-3 py-1 border rounded"
                       >
                         -
@@ -62,9 +57,7 @@ export default function CartPage() {
                       <span>{item.quantity}</span>
 
                       <button
-                        onClick={() =>
-                          increaseQty(item.id, tenantSlug)
-                        }
+                        onClick={() => increaseQty(item.id, tenantSlug)}
                         className="px-3 py-1 border rounded"
                       >
                         +
@@ -74,13 +67,11 @@ export default function CartPage() {
 
                   <div className="text-right">
                     <p className="font-semibold text-orange-600">
-                      ${(parseFloat(item.price.replace("$", "")) * item.quantity).toFixed(2)}
+                      ${((item.priceCents * item.quantity) / 100).toFixed(2)}
                     </p>
 
                     <button
-                      onClick={() =>
-                        removeItem(item.id, tenantSlug)
-                      }
+                      onClick={() => removeItem(item.id, tenantSlug)}
                       className="text-sm text-red-500 mt-2"
                     >
                       Remove
@@ -93,7 +84,7 @@ export default function CartPage() {
             <div className="mt-8 border-t pt-6 flex justify-between items-center">
               <h2 className="text-xl font-semibold">Total</h2>
               <h2 className="text-xl font-bold text-orange-600">
-                ${total.toFixed(2)}
+                ${(totalCents / 100).toFixed(2)}
               </h2>
             </div>
 
