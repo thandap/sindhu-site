@@ -80,35 +80,35 @@ export default function Home() {
           <div className="mt-8 grid gap-6 md:grid-cols-2">
             <div className="rounded-2xl bg-white p-6 shadow-md">
               <h3 className="text-xl font-semibold">East Side — East Lansing</h3>
-              <details className="mt-5">
-                <summary className="cursor-pointer list-none rounded-full bg-orange-600 px-6 py-3 text-center font-semibold text-white transition hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-700 [&::-webkit-details-marker]:hidden">
-                  East
-                </summary>
-                <div className="mt-5 rounded-xl border border-orange-200 bg-orange-50 p-5">
-  <p className="font-semibold text-slate-900">
-    We are moving from Hannah Plaza to Hannah Lofts,
-    just a couple of blocks from Hannah Plaza!
-  </p>
-
-  <address className="mt-3 not-italic leading-7 text-slate-700">
-    2929 Hannah Blvd.<br />
-    East Lansing, MI 48823
-  </address>
-
-  <a
-    href="https://sindhu-indian-west.cloveronline.com/"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="mt-4 inline-block font-semibold text-orange-700 hover:underline"
-  >
-    Until we open, please visit our West Side location →
-  </a>
-
-  <p className="mt-4 font-bold text-orange-700">
-    East or West — Sindhu is the Best!
-  </p>
-</div>
-              </details>
+              <a
+                href="https://sindhu-indian-east-lansing.cloveronline.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-5 block rounded-full bg-orange-600 px-6 py-3 text-center font-semibold text-white transition hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-700"
+              >
+                East
+              </a>
+              <address className="mt-5 not-italic leading-7 text-slate-700">
+                <span className="font-semibold">Hannah Lofts</span><br />
+                2929 Hannah Blvd.<br />
+                East Lansing, MI 48823
+              </address>
+              <p className="mt-3 text-slate-700">
+                Call/Text —{" "}
+                <a href="tel:+15175990349" className="font-medium text-orange-700 hover:underline">
+                  (517) 599-0349
+                </a>
+              </p>
+              <p className="mt-2 text-sm text-slate-600">
+                Next to Hannah Convenience Store, across from MAC.
+              </p>
+              <p className="mt-4 text-slate-700">
+                We are moving from Hannah Plaza to Hannah Lofts,
+                just a couple of blocks from Hannah Plaza!
+              </p>
+              <p className="mt-4 font-bold text-orange-700">
+                East or West — Sindhu is the Best!
+              </p>
             </div>
             <div className="rounded-2xl bg-white p-6 shadow-md">
               <h3 className="text-xl font-semibold">West Side — Lansing</h3>
@@ -127,6 +127,9 @@ export default function Home() {
               <a href="tel:+15179008469" className="mt-3 inline-block font-medium text-orange-700 hover:underline">
                 (517) 900-8469
               </a>
+              <p className="mt-2 text-sm text-slate-600">
+                Located at the fork of Saginaw &amp; Oakland.
+              </p>
             </div>
           </div>
         </div>
