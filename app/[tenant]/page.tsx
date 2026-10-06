@@ -1,143 +1,261 @@
 import Link from "next/link";
-import { getTenantBySlug } from "@/lib/tenant/getTenantConfig";
-
-type Props = {
-  params: Promise<{
-    tenant: string;
-  }>;
+const restaurantSchema = {
+  "@context": "https://schema.org",
+  "@type": "Restaurant",
+  name: "Sindhu Indian Cuisine — West Side",
+  url: "https://www.sindhuindian.com/#locations",
+  telephone: "+1-517-900-8469",
+  image: "https://www.sindhuindian.com/images/hero.jpg",
+  servesCuisine: "Indian",
+  menu: "https://sindhu-indian-west.cloveronline.com/",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "2010 W Saginaw Street",
+    addressLocality: "Lansing",
+    addressRegion: "MI",
+    postalCode: "48915",
+    addressCountry: "US",
+  },
 };
 
-export default async function TenantHome({ params }: Props) {
-  const { tenant: tenantSlug } = await params;
-  const tenant = getTenantBySlug(tenantSlug);
-
-  if (!tenant) {
-    return (
-      <main className="min-h-screen bg-white px-6 py-16 text-slate-900">
-        <div className="mx-auto max-w-4xl">
-          <h1 className="text-3xl font-bold">Tenant not found</h1>
-          <p className="mt-4 text-slate-600">
-            We could not find a restaurant for this route.
-          </p>
-        </div>
-      </main>
-    );
-  }
-
-  const isSindhu =
-    /sindhu/i.test(tenant.name) ||
-    /sindhu/i.test(tenant.branding.logoText);
-
+export default function Home() {
   return (
     <main className="min-h-screen bg-white text-slate-900">
-      <section className="relative flex min-h-[80vh] items-center justify-center px-6 py-16 text-center text-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(restaurantSchema),
+        }}
+      />
+      <section className="relative h-[80vh] flex items-center justify-center text-center text-white">
+        {/* Background Image */}
         <div className="absolute inset-0 bg-[url('/images/hero.jpg')] bg-cover bg-center" />
-        <div className="absolute inset-0 bg-black/70" />
-
-        <div className="relative z-10 w-full max-w-3xl">
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-black/60" />
+        {/* Content */}
+        <div className="relative z-10 px-6">
           <p className="mb-4 text-sm font-semibold uppercase tracking-[0.3em] text-orange-300">
-            {tenant.businessType === "catering"
-              ? "Premium Catering Services"
-              : "Authentic Indian Dining"}
+            Authentic Indian Dining
           </p>
-
-          <h1 className="text-5xl font-bold tracking-widest md:text-7xl">
-            {tenant.branding.logoText}
+          <h1 className="text-5xl md:text-7xl font-bold tracking-widest">
+            SINDHU
           </h1>
-
-          <p className="mt-3 text-2xl text-gray-200 md:text-3xl">
-            {tenant.name}
+          <p className="mt-3 text-2xl md:text-3xl text-gray-200">
+            Indian Restaurant
           </p>
-
-          {isSindhu ? (
-            <div className="mt-8 rounded-2xl border border-white/20 bg-black/40 p-6 md:p-8">
-              <h2 className="text-2xl font-semibold md:text-3xl">
-                Sindhu Indian Cuisine has two locations now
-              </h2>
-
-              <p className="mt-3 text-lg text-gray-200">
-                Please order from East or West.
-              </p>
-
-              <div className="mt-6 grid items-start gap-5 sm:grid-cols-2">
-                <details>
-                  <summary className="cursor-pointer list-none rounded-full bg-orange-600 px-8 py-3 text-lg font-semibold transition hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white [&::-webkit-details-marker]:hidden">
-                    East
-                  </summary>
-
-                  <div className="mt-5 rounded-xl border border-orange-200 bg-orange-50 p-5">
-                    <p className="font-semibold text-slate-900">
-                      We are moving from Hannah Plaza to Hannah Lofts,
-                      just a couple of blocks from Hannah Plaza!
-                    </p>
-
-                    <address className="mt-3 not-italic leading-7 text-slate-700">
-                      2929 Hannah Blvd.<br />
-                      East Lansing, MI 48823
-                    </address>
-
-                    <a
-                      href="https://sindhu-indian-west.cloveronline.com/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-4 inline-block font-semibold text-orange-700 hover:underline"
-                    >
-                      Until we open, please visit our West Side location →
-                    </a>
-
-                    <p className="mt-4 font-bold text-orange-700">
-                      East or West — Sindhu is the Best!
-                    </p>
-                  </div>
-                </details>
-
-                <div>
-                  <a
-                    href="https://sindhu-indian-west.cloveronline.com/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block rounded-full bg-orange-600 px-8 py-3 text-lg font-semibold transition hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
-                  >
-                    West
-                  </a>
-
-                  <address className="mt-4 not-italic leading-7 text-gray-200">
-                    2010 W Saginaw Street
-                    <br />
-                    Lansing, MI 48915
-                  </address>
-
-                  <a
-                    href="tel:+15179008469"
-                    className="mt-2 inline-block text-orange-300 hover:underline"
-                  >
-                    (517) 900-8469
-                  </a>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <p className="mx-auto mt-6 max-w-2xl text-lg text-gray-300">
-              {tenant.branding.heroSubtitle}
-            </p>
-          )}
-
+          <p className="mt-6 max-w-2xl mx-auto text-lg text-gray-300">
+            A warm, elevated dining experience with authentic Indian flavors,
+            fresh ingredients, and dishes crafted to bring family and friends together.
+          </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <Link
-              href={`/${tenant.slug}/menu`}
-              className="rounded-full bg-orange-600 px-6 py-3 font-semibold transition hover:bg-orange-700"
+            <a
+              href="/menu"
+              className="bg-orange-600 px-6 py-3 rounded-full font-semibold hover:bg-orange-700 transition"
             >
               Explore Menu
+            </a>
+            <Link
+              href="#locations"
+              className="bg-white px-6 py-3 rounded-full font-semibold text-orange-700 hover:bg-orange-50 transition"
+            >
+              Order Online — Choose Location
             </Link>
+            <a
+              href="#locations"
+              className="border border-white px-6 py-3 rounded-full hover:bg-white hover:text-black transition"
+            >
+              Visit Us
+            </a>
+          </div>
+        </div>
+      </section>
+      <section id="locations" className="mx-auto max-w-6xl scroll-mt-8 px-6 py-16">
+        <div className="rounded-3xl bg-orange-50 px-6 py-10 md:px-12">
+          <h2 className="text-center text-3xl font-bold text-slate-900">
+            Sindhu Indian Cuisine has two locations now
+          </h2>
+          <p className="mt-4 text-center text-lg text-slate-700">
+            Please order from East or West.
+          </p>
+          <div className="mt-8 grid gap-6 md:grid-cols-2">
+            <div className="rounded-2xl bg-white p-6 shadow-md">
+              <h3 className="text-xl font-semibold">East Side — East Lansing</h3>
 
-            {!isSindhu && (
-              <Link
-                href={`/${tenant.slug}/contact`}
-                className="rounded-full border border-white px-6 py-3 hover:bg-white hover:text-black"
+              <summary className="cursor-pointer list-none rounded-full bg-orange-600 px-6 py-3 text-center font-semibold text-white transition hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-700 [&::-webkit-details-marker]:hidden">
+                East
+              </summary>
+              <div className="mt-5 rounded-xl border border-orange-200 bg-orange-50 p-5">
+                <p className="font-semibold text-slate-900">
+                  We are moving from Hannah Plaza to Hannah Lofts,
+                  just a couple of blocks from Hannah Plaza!
+                </p>
+
+                <address className="mt-5 not-italic leading-7 text-slate-700">
+                  <span className="font-semibold">Hannah Lofts</span><br />
+                  2929 Hannah Blvd.<br />
+                  East Lansing, MI 48823
+                </address>
+
+                <p className="mt-3 text-slate-700">
+                  Call/Text —{" "}
+                  <a href="tel:+15175990349" className="font-medium text-orange-700 hover:underline">
+                    (517) 599-0349
+                  </a>
+                </p>
+
+                <p className="mt-2 text-sm text-slate-600">
+                  Next to Hannah Convenience Store, across from MAC.
+                </p>
+
+                <a
+                  href="https://sindhu-indian-east-lansing.cloveronline.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 inline-block font-semibold text-orange-700 hover:underline"
+                >
+                  Until we open, please visit our West Side location →
+                </a>
+
+                <p className="mt-4 font-bold text-orange-700">
+                  East or West — Sindhu is the Best!
+                </p>
+              </div>
+
+            </div>
+            <div className="rounded-2xl bg-white p-6 shadow-md">
+              <h3 className="text-xl font-semibold">West Side — Lansing</h3>
+              <a
+                href="https://sindhu-indian-west.cloveronline.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-5 block rounded-full bg-orange-600 px-6 py-3 text-center font-semibold text-white transition hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-700"
               >
-                Contact Us
-              </Link>
-            )}
+                West
+              </a>
+              <address className="mt-5 not-italic leading-7 text-slate-700">
+                2010 W Saginaw Street<br />
+                Lansing, MI 48915
+              </address>
+              <a href="tel:+15179008469" className="mt-3 inline-block font-medium text-orange-700 hover:underline">
+                (517) 900-8469
+              </a>
+              <p className="mt-2 text-sm text-slate-600">
+                Located at the fork of Saginaw &amp; Oakland.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-y border-slate-200 bg-slate-50">
+        <div className="mx-auto grid max-w-6xl gap-6 px-6 py-8 text-center md:grid-cols-3">
+          <div>
+            <p className="text-lg font-semibold text-slate-900">Fresh Ingredients</p>
+            <p className="mt-1 text-sm text-slate-600">
+              Prepared with care and authentic spices.
+            </p>
+          </div>
+          <div>
+            <p className="text-lg font-semibold text-slate-900">Family Friendly</p>
+            <p className="mt-1 text-sm text-slate-600">
+              A welcoming place for everyday dining and celebrations.
+            </p>
+          </div>
+          <div>
+            <p className="text-lg font-semibold text-slate-900">Traditional Flavor</p>
+            <p className="mt-1 text-sm text-slate-600">
+              Classic dishes with richness, depth, and balance.
+            </p>
+          </div>
+        </div>
+      </section>
+      <section className="mx-auto max-w-6xl px-6 py-20">
+        <div className="mb-10 flex items-end justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-orange-700">
+              Featured Favorites
+            </p>
+            <h2 className="mt-2 text-3xl font-bold text-slate-900 md:text-4xl">
+              Signature Dishes
+            </h2>
+          </div>
+          <Link
+            href="/menu"
+            className="hidden text-sm font-semibold text-orange-700 hover:text-orange-800 md:inline"
+          >
+            View Full Menu
+          </Link>
+        </div>
+        <div className="grid gap-6 md:grid-cols-3">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-md transition hover:shadow-xl">
+            <img
+              src="/images/butter-chicken.jpg"
+              alt="Butter Chicken"
+              className="mb-4 h-52 w-full rounded-xl object-cover transition duration-300 hover:scale-105"
+            />
+            <h3 className="text-xl font-semibold text-slate-900">Butter Chicken</h3>
+            <p className="mt-3 text-sm leading-7 text-slate-600">
+              Tender chicken in a rich tomato butter sauce with aromatic spices.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md">
+            <img
+              src="/images/chicken-biryani.jpg"
+              alt="Chicken Biryani"
+              className="mb-4 h-52 w-full rounded-xl object-cover transition duration-300 hover:scale-105"
+            />
+            <h3 className="text-xl font-semibold text-slate-900">Chicken Biryani</h3>
+            <p className="mt-3 text-sm leading-7 text-slate-600">
+              Fragrant basmati rice layered with spiced chicken and fresh herbs.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md">
+            <img
+              src="/images/paneer-tikka-masala.jpg"
+              alt="Paneer Tikka Masala"
+              className="mb-4 h-52 w-full rounded-xl object-cover transition duration-300 hover:scale-105"
+            />
+            <h3 className="text-xl font-semibold text-slate-900">
+              Paneer Tikka Masala
+            </h3>
+            <p className="mt-3 text-sm leading-7 text-slate-600">
+              Soft paneer cubes in a creamy, flavorful masala gravy.
+            </p>
+          </div>
+        </div>
+        <div className="mt-8 md:hidden">
+          <Link
+            href="/menu"
+            className="text-sm font-semibold text-orange-700 hover:text-orange-800"
+          >
+            View Full Menu
+          </Link>
+        </div>
+      </section>
+      <section className="bg-slate-900 text-white">
+        <div className="mx-auto grid max-w-6xl gap-10 px-6 py-20 md:grid-cols-2 md:items-center">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-orange-300">
+              Our Story
+            </p>
+            <h2 className="mt-3 text-3xl font-bold md:text-4xl">
+              Hospitality, warmth, and memorable Indian cuisine
+            </h2>
+            <p className="mt-6 text-base leading-8 text-slate-300">
+              Sindhu Indian Restaurant is built around the joy of sharing food,
+              culture, and tradition. From comforting curries to fragrant biryanis
+              and freshly prepared specialties, every dish is crafted to create a
+              memorable dining experience.
+            </p>
+          </div>
+          <div className="rounded-3xl bg-white/10 p-8 backdrop-blur-sm">
+            <p className="text-lg font-semibold">Why guests love Sindhu</p>
+            <ul className="mt-6 space-y-4 text-sm leading-7 text-slate-200">
+              <li>Authentic Indian flavors with balanced seasoning</li>
+              <li>Welcoming setting for families and groups</li>
+              <li>Freshly prepared dishes served with care</li>
+              <li>Perfect for lunch, dinner, and celebrations</li>
+            </ul>
           </div>
         </div>
       </section>
