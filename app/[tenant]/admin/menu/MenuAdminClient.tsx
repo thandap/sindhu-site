@@ -2,12 +2,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
+import Image from "next/image";
 
 type MenuItem = {
     id: string;
     name: string;
     description: string | null;
+    image: string | null;
     isVegetarian: boolean;
     isVegan: boolean;
     priceCents: number;
@@ -58,6 +60,90 @@ export default function MenuAdminClient({
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+    const [photoFile, setPhotoFile] = useState<File | null>(null);
+    const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+    const [currentPhoto, setCurrentPhoto] = useState<string | null>(null);
+    const [photoBusy, setPhotoBusy] = useState(false);
+
+    useEffect(() => {
+        if (!photoFile) {
+            setPhotoPreview(null);
+            return;
+        }
+        const url = URL.createObjectURL(photoFile);
+        setPhotoPreview(url);
+        return () => URL.revokeObjectURL(url);
+    }, [photoFile]);
+
+    function resetPhotoState() {
+        setPhotoFile(null);
+        setCurrentPhoto(null);
+    }
+
+    function selectPhoto(event: ChangeEvent<HTMLInputElement>) {
+        const file = event.target.files?.[0];
+        event.target.value = "";
+        if (!file) return;
+        if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+            setError("Choose a JPG, PNG, or WebP picture.");
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024 || file.size === 0) {
+            setError("Choose a picture smaller than 5 MB.");
+            return;
+        }
+        setError("");
+        setPhotoFile(file);
+    }
+
+    async function uploadPhoto() {
+        if (!editingItemId || !photoFile || photoBusy || saving) return;
+        setPhotoBusy(true);
+        setError("");
+        setSuccess("");
+        try {
+            const form = new FormData();
+            form.append("file", photoFile);
+            const response = await fetch(
+                `/api/admin/menu/items/${encodeURIComponent(editingItemId)}/image`,
+                { method: "POST", body: form }
+            );
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message || "Photo upload failed");
+            setCurrentPhoto(result.image);
+            setPhotoFile(null);
+            setSuccess("Dish picture uploaded successfully.");
+            router.refresh();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Photo upload failed");
+        } finally {
+            setPhotoBusy(false);
+        }
+    }
+
+    async function removePhoto() {
+        if (!editingItemId || !currentPhoto || photoBusy || saving) return;
+        if (!window.confirm("Remove this dish picture?")) return;
+        setPhotoBusy(true);
+        setError("");
+        setSuccess("");
+        try {
+            const response = await fetch(
+                `/api/admin/menu/items/${encodeURIComponent(editingItemId)}/image`,
+                { method: "DELETE" }
+            );
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message || "Unable to remove photo");
+            setCurrentPhoto(null);
+            setPhotoFile(null);
+            setSuccess("Dish picture removed successfully.");
+            router.refresh();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Unable to remove photo");
+        } finally {
+            setPhotoBusy(false);
+        }
+    }
 
     function updateItem<K extends keyof ItemForm>(
         field: K,
@@ -74,6 +160,7 @@ export default function MenuAdminClient({
         setSelectedCategoryId(closing ? null : categoryId);
         setEditingItemId(null);
         setItemForm({ ...emptyItem });
+        resetPhotoState();
         setShowCategoryForm(false);
         setError("");
         setSuccess("");
@@ -82,6 +169,8 @@ export default function MenuAdminClient({
     function editItem(item: MenuItem, categoryId: string) {
         setSelectedCategoryId(categoryId);
         setEditingItemId(item.id);
+        setPhotoFile(null);
+        setCurrentPhoto(item.image);
         setItemForm({
             name: item.name,
             description: item.description ?? "",
@@ -356,7 +445,7 @@ export default function MenuAdminClient({
 
                                 <button
                                     type="button"
-                                    onClick={() => openItemForm(category.id)}
+                                    onClick={() => { openItemForm(category.id); resetPhotoState(); }}
                                     className="rounded-lg bg-orange-700 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-800"
                                 >
                                     {selectedCategoryId === category.id
@@ -463,9 +552,74 @@ export default function MenuAdminClient({
                                         </label>
                                     </div>
 
+                                    {editingItemId && (
+                                        <div className="mt-5 rounded-lg border border-orange-200 bg-white p-4">
+                                            <h4 className="font-semibold">Dish Picture</h4>
+                                            <p className="mt-1 text-sm text-slate-600">
+                                                JPG, PNG, or WebP, up to 5 MB. Picture changes save separately from dish details.
+                                            </p>
+                                            <div className="mt-3 flex flex-wrap items-start gap-4">
+                                                {(photoPreview || currentPhoto) ? (
+                                                    <Image
+                                                        src={photoPreview || currentPhoto || ""}
+                                                        alt={`Picture of ${itemForm.name}`}
+                                                        width={160}
+                                                        height={120}
+                                                        unoptimized
+                                                        className="h-32 w-40 rounded-lg border object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="flex h-32 w-40 items-center justify-center rounded-lg border bg-slate-100 text-sm text-slate-500">
+                                                        No picture yet
+                                                    </div>
+                                                )}
+                                                <div className="flex flex-col gap-3">
+                                                    <input
+                                                        aria-label="Choose dish picture"
+                                                        type="file"
+                                                        accept="image/jpeg,image/png,image/webp"
+                                                        onChange={selectPhoto}
+                                                        disabled={photoBusy || saving}
+                                                        className="max-w-full text-sm"
+                                                    />
+                                                    <div className="flex flex-wrap gap-2">
+                                                        <button
+                                                            type="button"
+                                                            disabled={!photoFile || photoBusy || saving}
+                                                            onClick={uploadPhoto}
+                                                            className="rounded-lg bg-orange-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                                                        >
+                                                            {photoBusy ? "Working..." : currentPhoto ? "Replace Photo" : "Upload Photo"}
+                                                        </button>
+                                                        {photoFile && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setPhotoFile(null)}
+                                                                disabled={photoBusy}
+                                                                className="rounded-lg border px-4 py-2 text-sm"
+                                                            >
+                                                                Cancel Selection
+                                                            </button>
+                                                        )}
+                                                        {currentPhoto && (
+                                                            <button
+                                                                type="button"
+                                                                disabled={photoBusy || saving}
+                                                                onClick={removePhoto}
+                                                                className="rounded-lg border border-red-200 px-4 py-2 text-sm text-red-700 disabled:opacity-50"
+                                                            >
+                                                                Remove Photo
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <button
                                         type="submit"
-                                        disabled={saving}
+                                        disabled={saving || photoBusy}
                                         className="mt-5 rounded-lg bg-orange-700 px-5 py-3 font-semibold text-white hover:bg-orange-800 disabled:opacity-50"
                                     >
                                         {saving ? "Saving..." : editingItemId ? "Save Changes" : "Save Menu Item"}
@@ -477,13 +631,27 @@ export default function MenuAdminClient({
                                 {category.items.map((item) => (
                                     <div
                                         key={item.id}
-                                        className="flex items-center justify-between gap-3 border-b py-3 last:border-0"
+                                        className="flex flex-wrap items-center justify-between gap-3 border-b py-3 last:border-0"
                                     >
-                                        <div>
-                                            <p className="font-medium">{item.name}</p>
-                                            <p className="text-sm text-slate-500">
-                                                ${(item.priceCents / 100).toFixed(2)}
-                                            </p>
+                                        <div className="flex items-center gap-3">
+                                            {item.image ? (
+                                                <Image
+                                                    src={item.image}
+                                                    alt={item.name}
+                                                    width={64}
+                                                    height={64}
+                                                    unoptimized
+                                                    className="h-16 w-16 rounded-lg border object-cover"
+                                                />
+                                            ) : (
+                                                <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-slate-100 text-xs text-slate-400">No photo</div>
+                                            )}
+                                            <div>
+                                                <p className="font-medium">{item.name}</p>
+                                                <p className="text-sm text-slate-500">
+                                                    ${(item.priceCents / 100).toFixed(2)}
+                                                </p>
+                                            </div>
                                         </div>
 
                                         <div className="flex items-center gap-3">
@@ -498,18 +666,18 @@ export default function MenuAdminClient({
                                             </span>
                                             <button
                                                 type="button"
-                                                disabled={saving}
+                                                disabled={saving || photoBusy}
                                                 onClick={() => toggleAvailability(item)}
                                                 className={`rounded-lg border px-3 py-2 text-sm font-medium disabled:opacity-50 ${item.isAvailable
-                                                        ? "border-red-200 text-red-700 hover:bg-red-50"
-                                                        : "border-green-200 text-green-700 hover:bg-green-50"
+                                                    ? "border-red-200 text-red-700 hover:bg-red-50"
+                                                    : "border-green-200 text-green-700 hover:bg-green-50"
                                                     }`}
                                             >
                                                 {item.isAvailable ? "Mark Sold Out" : "Mark Available"}
                                             </button>
                                             <button
                                                 type="button"
-                                                disabled={saving}
+                                                disabled={saving || photoBusy}
                                                 onClick={() => editItem(item, category.id)}
                                                 className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50"
                                             >

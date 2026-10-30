@@ -8,6 +8,7 @@ type MenuItem = {
   name: string;
   desc: string;
   priceCents: number;
+  image: string | null;
   veg?: boolean;
   spicy?: boolean;
 };
@@ -50,8 +51,9 @@ export default function TenantMenuClient({
             category: cat.name,
             items: cat.items.map((item: any) => ({
               name: item.name,
-              desc: item.description,
+              desc: item.description ?? "",
               priceCents: item.priceCents,
+              image: item.image ?? null,
               veg: item.isVegetarian,
               spicy: (item.spiceLevel || 0) > 0,
             })),
@@ -104,10 +106,25 @@ export default function TenantMenuClient({
 
                   return (
                     <div key={itemId} className="border-b pb-4">
-                      <div className="flex justify-between">
-                        <div>
-                          <h3 className="font-semibold">{item.name}</h3>
-                          <p className="text-sm text-gray-600">{item.desc}</p>
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex min-w-0 items-start gap-4">
+                          {item.image ? (
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              loading="lazy"
+                              className="h-24 w-24 shrink-0 rounded-xl object-cover shadow-sm sm:h-28 sm:w-28"
+                            />
+                          ) : (
+                            <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-xs text-orange-700 sm:h-28 sm:w-28">
+                              No photo
+                            </div>
+                          )}
+
+                          <div className="min-w-0">
+                            <h3 className="font-semibold">{item.name}</h3>
+                            <p className="mt-1 text-sm text-gray-600">{item.desc}</p>
+                          </div>
                         </div>
 
                         <div className="text-right">
@@ -117,22 +134,22 @@ export default function TenantMenuClient({
 
                           <button
                             onClick={() => {
-  console.log("adding item", {
-    id: itemId,
-    tenantSlug,
-    name: item.name,
-    priceCents: item.priceCents,
-  });
-  addItem({
-    id: itemId,
-    tenantSlug,
-    name: item.name,
-    priceCents: item.priceCents,
-    desc: item.desc,
-    veg: item.veg,
-    spicy: item.spicy,
-  });
-}}
+                              console.log("adding item", {
+                                id: itemId,
+                                tenantSlug,
+                                name: item.name,
+                                priceCents: item.priceCents,
+                              });
+                              addItem({
+                                id: itemId,
+                                tenantSlug,
+                                name: item.name,
+                                priceCents: item.priceCents,
+                                desc: item.desc,
+                                veg: item.veg,
+                                spicy: item.spicy,
+                              });
+                            }}
                             className="mt-2 rounded bg-orange-600 px-3 py-1 text-white"
                           >
                             Add
