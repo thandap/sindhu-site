@@ -1,0 +1,489 @@
+
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useState, type FormEvent } from "react";
+
+type MenuItem = {
+  id: string;
+  name: string;
+  description: string | null;
+  isVegetarian: boolean;
+  isVegan: boolean;
+  priceCents: number;
+  isActive: boolean;
+  isAvailable: boolean;
+};
+
+type MenuCategory = {
+  id: string;
+  name: string;
+  items: MenuItem[];
+};
+
+type Props = {
+  restaurantName: string;
+  categories: MenuCategory[];
+};
+
+type ItemForm = {
+  name: string;
+  description: string;
+  price: string;
+  isVegetarian: boolean;
+  isVegan: boolean;
+};
+
+const emptyItem: ItemForm = {
+  name: "",
+  description: "",
+  price: "",
+  isVegetarian: false,
+  isVegan: false,
+};
+
+export default function MenuAdminClient({
+  restaurantName,
+  categories,
+}: Props) {
+  const router = useRouter();
+
+  const [showCategoryForm, setShowCategoryForm] = useState(false);
+  const [categoryName, setCategoryName] = useState("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    null
+  );
+  const [itemForm, setItemForm] = useState<ItemForm>(emptyItem);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  function updateItem<K extends keyof ItemForm>(
+    field: K,
+    value: ItemForm[K]
+  ) {
+    setItemForm((previous) => ({
+      ...previous,
+      [field]: value,
+    }));
+  }
+
+  function openItemForm(categoryId: string) {
+    const closing = selectedCategoryId === categoryId;
+    setSelectedCategoryId(closing ? null : categoryId);
+    setEditingItemId(null);
+    setItemForm({ ...emptyItem });
+    setShowCategoryForm(false);
+    setError("");
+    setSuccess("");
+  }
+
+  function editItem(item: MenuItem, categoryId: string) {
+    setSelectedCategoryId(categoryId);
+    setEditingItemId(item.id);
+    setItemForm({
+      name: item.name,
+      description: item.description ?? "",
+      price: (item.priceCents / 100).toFixed(2),
+      isVegetarian: item.isVegetarian,
+      isVegan: item.isVegan,
+    });
+    setShowCategoryForm(false);
+    setError("");
+    setSuccess("");
+  }
+
+  async function sendJson(
+    url: string,
+    data: Record<string, unknown>
+  ) {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    const contentType = response.headers.get("content-type") ?? "";
+
+    if (!contentType.includes("application/json")) {
+      throw new Error(
+        `Server returned HTTP ${response.status} instead of JSON`
+      );
+    }
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || "Unable to save");
+    }
+
+    return result;
+  }
+
+  async function addCategory(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const name = categoryName.trim();
+    if (!name || saving) return;
+
+    setSaving(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      await sendJson("/api/admin/menu/categories", { name });
+
+      setCategoryName("");
+      setShowCategoryForm(false);
+      setSuccess(`Category "${name}" created successfully.`);
+      router.refresh();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Unable to create category"
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function addItem(
+    event: FormEvent<HTMLFormElement>,
+    categoryId: string
+  ) {
+    event.preventDefault();
+
+    if (saving) return;
+
+    const name = itemForm.name.trim();
+    const price = itemForm.price.trim();
+
+    if (!name || !price) {
+      setError("Item name and price are required.");
+      return;
+    }
+
+    setSaving(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      await sendJson("/api/admin/menu/items", {
+        categoryId,
+        name,
+        description: itemForm.description,
+        price,
+        isVegetarian: itemForm.isVegetarian,
+        isVegan: itemForm.isVegan,
+      });
+
+      setItemForm({ ...emptyItem });
+      setSelectedCategoryId(null);
+      setSuccess(`Menu item "${name}" created successfully.`);
+      router.refresh();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Unable to create item"
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function saveItemChanges(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editingItemId || saving) return;
+
+    setSaving(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const response = await fetch(
+        `/api/admin/menu/items/${encodeURIComponent(editingItemId)}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: itemForm.name.trim(),
+            description: itemForm.description.trim(),
+            price: itemForm.price.trim(),
+            isVegetarian: itemForm.isVegetarian,
+            isVegan: itemForm.isVegan,
+          }),
+        }
+      );
+      if (!(response.headers.get("content-type") ?? "").includes("application/json")) {
+        throw new Error(`Server returned HTTP ${response.status} instead of JSON`);
+      }
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || "Unable to update item");
+
+      setSuccess(`Menu item "${itemForm.name.trim()}" updated successfully.`);
+      setEditingItemId(null);
+      setSelectedCategoryId(null);
+      setItemForm({ ...emptyItem });
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to update item");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <main className="min-h-screen bg-slate-50 p-6 text-slate-900">
+      <div className="mx-auto max-w-6xl">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">Menu Management</h1>
+            <p className="mt-2 text-slate-600">{restaurantName}</p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setShowCategoryForm(!showCategoryForm);
+              setSelectedCategoryId(null);
+              setEditingItemId(null);
+              setItemForm({ ...emptyItem });
+              setError("");
+              setSuccess("");
+            }}
+            className="rounded-lg bg-orange-700 px-5 py-3 font-semibold text-white hover:bg-orange-800"
+          >
+            {showCategoryForm ? "Cancel" : "+ Add Category"}
+          </button>
+        </div>
+
+        {showCategoryForm && (
+          <form
+            onSubmit={addCategory}
+            className="mt-6 rounded-xl border bg-white p-5 shadow-sm"
+          >
+            <label
+              htmlFor="categoryName"
+              className="block text-sm font-semibold"
+            >
+              Category Name
+            </label>
+
+            <input
+              id="categoryName"
+              value={categoryName}
+              onChange={(event) => setCategoryName(event.target.value)}
+              maxLength={100}
+              required
+              placeholder="Example: Appetizers"
+              className="mt-2 w-full rounded-lg border border-slate-300 p-3"
+            />
+
+            <button
+              type="submit"
+              disabled={saving || !categoryName.trim()}
+              className="mt-4 rounded-lg bg-orange-700 px-5 py-2 font-semibold text-white disabled:opacity-50"
+            >
+              {saving ? "Saving..." : "Save Category"}
+            </button>
+          </form>
+        )}
+
+        {error && (
+          <p role="alert" className="mt-4 text-red-700">
+            {error}
+          </p>
+        )}
+
+        {success && (
+          <p role="status" className="mt-4 text-green-700">
+            {success}
+          </p>
+        )}
+
+        <div className="mt-8 space-y-6">
+          {categories.map((category) => (
+            <section
+              key={category.id}
+              className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+            >
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-semibold">{category.name}</h2>
+                  <p className="text-xs text-slate-500">
+                    {category.items.length} menu items
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => openItemForm(category.id)}
+                  className="rounded-lg bg-orange-700 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-800"
+                >
+                  {selectedCategoryId === category.id
+                    ? "Cancel"
+                    : "+ Add Item"}
+                </button>
+              </div>
+
+              {selectedCategoryId === category.id && (
+                <form
+                  onSubmit={(event) => editingItemId ? saveItemChanges(event) : addItem(event, category.id)}
+                  className="mb-6 rounded-lg border border-orange-200 bg-orange-50 p-4"
+                >
+                  <h3 className="mb-4 font-semibold">
+                    {editingItemId ? `Edit Item in ${category.name}` : `Add Item to ${category.name}`}
+                  </h3>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label
+                        htmlFor="itemName"
+                        className="block text-sm font-medium"
+                      >
+                        Item Name *
+                      </label>
+                      <input
+                        id="itemName"
+                        required
+                        maxLength={150}
+                        value={itemForm.name}
+                        onChange={(event) =>
+                          updateItem("name", event.target.value)
+                        }
+                        placeholder="Example: Vegetable Samosa"
+                        className="mt-1 w-full rounded-lg border border-slate-300 bg-white p-3"
+                      />
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="itemPrice"
+                        className="block text-sm font-medium"
+                      >
+                        Price ($) *
+                      </label>
+                      <input
+                        id="itemPrice"
+                        type="number"
+                        min="0.01"
+                        max="100000"
+                        step="0.01"
+                        required
+                        value={itemForm.price}
+                        onChange={(event) =>
+                          updateItem("price", event.target.value)
+                        }
+                        placeholder="9.99"
+                        className="mt-1 w-full rounded-lg border border-slate-300 bg-white p-3"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <label
+                      htmlFor="itemDescription"
+                      className="block text-sm font-medium"
+                    >
+                      Description
+                    </label>
+                    <textarea
+                      id="itemDescription"
+                      rows={3}
+                      maxLength={2000}
+                      value={itemForm.description}
+                      onChange={(event) =>
+                        updateItem("description", event.target.value)
+                      }
+                      placeholder="Describe the dish..."
+                      className="mt-1 w-full rounded-lg border border-slate-300 bg-white p-3"
+                    />
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap gap-6">
+                    <label className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={itemForm.isVegetarian}
+                        onChange={(event) =>
+                          updateItem("isVegetarian", event.target.checked)
+                        }
+                      />
+                      Vegetarian
+                    </label>
+
+                    <label className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={itemForm.isVegan}
+                        onChange={(event) =>
+                          updateItem("isVegan", event.target.checked)
+                        }
+                      />
+                      Vegan
+                    </label>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="mt-5 rounded-lg bg-orange-700 px-5 py-3 font-semibold text-white hover:bg-orange-800 disabled:opacity-50"
+                  >
+                    {saving ? "Saving..." : editingItemId ? "Save Changes" : "Save Menu Item"}
+                  </button>
+                </form>
+              )}
+
+              <div className="space-y-3">
+                {category.items.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between gap-3 border-b py-3 last:border-0"
+                  >
+                    <div>
+                      <p className="font-medium">{item.name}</p>
+                      <p className="text-sm text-slate-500">
+                        ${(item.priceCents / 100).toFixed(2)}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                    <span
+                      className={
+                        item.isAvailable
+                          ? "rounded-full bg-green-100 px-3 py-1 text-xs text-green-700"
+                          : "rounded-full bg-red-100 px-3 py-1 text-xs text-red-700"
+                      }
+                    >
+                      {item.isAvailable ? "Available" : "Sold Out"}
+                    </span>
+                      <button
+                        type="button"
+                        disabled={saving}
+                        onClick={() => editItem(item, category.id)}
+                        className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50"
+                      >
+                        Edit
+                      </button>
+                    </div>
+                  </div>
+                ))}
+
+                {category.items.length === 0 && (
+                  <p className="text-sm text-slate-500">
+                    No menu items in this category yet.
+                  </p>
+                )}
+              </div>
+            </section>
+          ))}
+
+          {categories.length === 0 && (
+            <div className="rounded-xl border bg-white p-8 text-center text-slate-500">
+              No menu categories found for this restaurant.
+            </div>
+          )}
+        </div>
+      </div>
+    </main>
+  );
+}
