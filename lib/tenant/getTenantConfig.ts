@@ -42,6 +42,96 @@ const tenants: TenantConfig[] = [
     isActive: true,
   },
   {
+  id: "sindhu-west-config",
+  slug: "sindhu-west",
+  name: "Sindhu Indian Restaurant - West Lansing",
+  brandName: "SINDHU",
+  businessType: "restaurant",
+  subdomain: "sindhu-west",
+  domain: undefined,
+
+  contact: {
+    phone: "(517) 900-8469",
+    email: "info@sindhu.com",
+  },
+
+  address: {
+    addressLine1: "2010 W Saginaw Street",
+    city: "Lansing",
+    state: "MI",
+    postalCode: "48915",
+    country: "USA",
+  },
+
+  branding: {
+    logoText: "SINDHU",
+    primaryColor: "#c2410c",
+    heroTitle: "Authentic Indian Cuisine",
+    heroSubtitle: "Fresh. Flavorful. Made with love.",
+  },
+
+  capabilities: {
+    pickupEnabled: true,
+    deliveryEnabled: false,
+    dineInEnabled: true,
+    cateringEnabled: false,
+    allowQuoteRequests: false,
+    acceptingOrders: false,
+  },
+
+  defaultFulfillmentType: "pickup",
+  defaultWorkflowType: "instant_order",
+  timezone: "America/Detroit",
+  currency: "USD",
+  taxRate: 0.06,
+  isActive: true,
+},
+{
+  id: "sindhu-east-config",
+  slug: "sindhu-east",
+  name: "Sindhu Indian Restaurant - East Lansing",
+  brandName: "SINDHU",
+  businessType: "restaurant",
+  subdomain: "sindhu-east",
+  domain: undefined,
+
+  contact: {
+    phone: "(517) 351-3080",
+    email: "info@sindhu.com",
+  },
+
+  address: {
+    addressLine1: "2929 Hannah Blvd",
+    city: "East Lansing",
+    state: "MI",
+    postalCode: "48823",
+    country: "USA",
+  },
+
+  branding: {
+    logoText: "SINDHU",
+    primaryColor: "#c2410c",
+    heroTitle: "Authentic Indian Cuisine",
+    heroSubtitle: "Fresh. Flavorful. Made with love.",
+  },
+
+  capabilities: {
+    pickupEnabled: true,
+    deliveryEnabled: false,
+    dineInEnabled: true,
+    cateringEnabled: false,
+    allowQuoteRequests: false,
+    acceptingOrders: false,
+  },
+
+  defaultFulfillmentType: "pickup",
+  defaultWorkflowType: "instant_order",
+  timezone: "America/Detroit",
+  currency: "USD",
+  taxRate: 0.06,
+  isActive: true,
+},
+  {
     id: "2",
     slug: "elitecaters",
     name: "Elite Caters",

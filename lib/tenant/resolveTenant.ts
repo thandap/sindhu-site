@@ -1,6 +1,5 @@
 import type { TenantConfig } from "@/types/tenant";
 import {
-  getDefaultTenant,
   getTenantByDomain,
   getTenantBySlug,
 } from "./getTenantConfig";
@@ -29,7 +28,7 @@ export function resolveTenant({
   ) {
     const parts = cleanPath.split("/").filter(Boolean);
     const slug = parts[0];
-    if (!slug) return getDefaultTenant();
+    if (!slug) return null;
     return getTenantBySlug(slug) || null;
   }
 
