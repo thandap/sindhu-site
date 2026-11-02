@@ -34,7 +34,9 @@ export default function TenantAdminOrdersClient({ tenant }: Props) {
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<OrderStatus | "all">("all");
+  const [filter, setFilter] = useState<
+    OrderStatus | "all" | "awaiting-payment"
+  >("all");
 
   async function loadOrders() {
     try {
@@ -88,15 +90,38 @@ export default function TenantAdminOrdersClient({ tenant }: Props) {
     return () => clearInterval(interval);
   }, [tenantSlug]);
 
-  const filteredOrders =
-    filter === "all"
-      ? orders
-      : orders.filter((order) => order.status === filter);
+  const filteredOrders = orders.filter((order) => {
+    if (filter === "all") {
+      return true;
+    }
+
+    if (filter === "awaiting-payment") {
+      return order.paymentStatus !== "paid";
+    }
+
+    if (filter === "new") {
+      return order.status === "new" && order.paymentStatus === "paid";
+    }
+
+    return order.status === filter && order.paymentStatus === "paid";
+  });
 
   const counts = {
-    new: orders.filter((o) => o.status === "new").length,
-    preparing: orders.filter((o) => o.status === "preparing").length,
-    ready: orders.filter((o) => o.status === "ready").length,
+    new: orders.filter(
+      (o) => o.status === "new" && o.paymentStatus === "paid"
+    ).length,
+
+    awaitingPayment: orders.filter(
+      (o) => o.paymentStatus !== "paid"
+    ).length,
+
+    preparing: orders.filter(
+      (o) => o.status === "preparing" && o.paymentStatus === "paid"
+    ).length,
+
+    ready: orders.filter(
+      (o) => o.status === "ready" && o.paymentStatus === "paid"
+    ).length,
   };
 
   function statusColor(status: OrderStatus) {
@@ -128,24 +153,31 @@ export default function TenantAdminOrdersClient({ tenant }: Props) {
         {/* STATUS SUMMARY */}
         <div className="flex gap-4 mb-6 text-sm">
           <span>New: {counts.new}</span>
+          <span>Awaiting Payment: {counts.awaitingPayment}</span>
           <span>Preparing: {counts.preparing}</span>
           <span>Ready: {counts.ready}</span>
         </div>
 
         {/* FILTER */}
         <div className="flex gap-2 mb-6 flex-wrap">
-          {["all", "new", "confirmed", "preparing", "ready", "completed"].map(
-            (f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f as any)}
-                className={`px-4 py-2 rounded-full border text-sm ${filter === f ? "bg-black text-white" : "hover:bg-gray-100"
-                  }`}
-              >
-                {f}
-              </button>
-            )
-          )}
+          {[
+            "all",
+            "new",
+            "awaiting-payment",
+            "confirmed",
+            "preparing",
+            "ready",
+            "completed",
+          ].map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f as typeof filter)}
+              className={`px-4 py-2 rounded-full border text-sm ${filter === f ? "bg-black text-white" : "hover:bg-gray-100"
+                }`}
+            >
+              {f === "awaiting-payment" ? "Awaiting Payment" : f}
+            </button>
+          ))}
         </div>
 
         {/* ORDERS */}
