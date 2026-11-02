@@ -116,6 +116,22 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Prevent checkout when the connected Stripe account
+        // is not approved to accept payments.
+        if (
+            !tenant.stripeChargesEnabled ||
+            !tenant.stripePayoutsEnabled
+        ) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message:
+                        "Online payment is temporarily unavailable for this restaurant. Please contact the restaurant.",
+                },
+                { status: 409 }
+            );
+        }
+
         // Server-controlled amounts for current pickup checkout
         const validatedDeliveryFeeCents = 0;
         const validatedGratuityCents = 0;

@@ -28,6 +28,9 @@ export async function GET(request: NextRequest) {
         name: true,
         brandName: true,
         config: true,
+        stripeAccountId: true,
+        stripeChargesEnabled: true,
+        stripePayoutsEnabled: true,
       },
     });
 
@@ -72,6 +75,12 @@ export async function GET(request: NextRequest) {
       },
       tax: {
         rate: Number(config.taxRate ?? 0.06),
+      },
+      payment: {
+        onlineEnabled:
+          Boolean(tenant.stripeAccountId) &&
+          tenant.stripeChargesEnabled &&
+          tenant.stripePayoutsEnabled,
       },
     });
   } catch (error) {

@@ -11,6 +11,9 @@ export default function CheckoutPage() {
 
 
   type CheckoutConfig = {
+    payment: {
+      onlineEnabled: boolean;
+    };
     fulfillment: {
       pickupEnabled: boolean;
       deliveryEnabled: boolean;
@@ -112,6 +115,7 @@ export default function CheckoutPage() {
     !configLoading &&
     !configError &&
     !!checkoutConfig &&
+    checkoutConfig.payment?.onlineEnabled === true &&
     tenantItems.length > 0 &&
     !deliveryQuoteRequired &&
     (fulfillmentType === "PICKUP"
@@ -178,7 +182,12 @@ export default function CheckoutPage() {
       window.location.href = data.checkoutUrl;
     } catch (error) {
       console.error(error);
-      alert("Failed to start checkout. Please try again.");
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to start checkout. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -304,7 +313,18 @@ export default function CheckoutPage() {
 
 
         <div className="flex flex-col items-end gap-3">
-
+          {!configLoading &&
+            !configError &&
+            checkoutConfig &&
+            checkoutConfig.payment?.onlineEnabled === false && (
+              <p
+                role="alert"
+                className="text-sm font-medium text-amber-700"
+              >
+                Online payment is temporarily unavailable for this restaurant.
+                Please contact the restaurant.
+              </p>
+            )}
           {tenantItems.length === 0 && (
             <p className="text-sm text-amber-700">
               Your cart is empty. Please add items from the menu
@@ -319,10 +339,12 @@ export default function CheckoutPage() {
             className="rounded-full bg-orange-600 px-6 py-3 text-white hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading
-              ? "Redirecting..."
-              : deliveryQuoteRequired
-                ? "Delivery Quote Required"
-                : "Pay Now"}
+              ? "Processing..."
+              : checkoutConfig?.payment?.onlineEnabled === false
+                ? "Online Payment Unavailable"
+                : deliveryQuoteRequired
+                  ? "Delivery Quote Required"
+                  : "Pay Now"}
           </button>
 
         </div>
