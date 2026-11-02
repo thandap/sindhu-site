@@ -91,6 +91,7 @@ export default async function PlatformPage() {
                 <tr>
                   <th className="px-5 py-4">Restaurant</th>
                   <th className="px-5 py-4">Stripe Account</th>
+                  <th className="px-5 py-4">Connection Status</th>
                   <th className="px-5 py-4">Charges</th>
                   <th className="px-5 py-4">Payouts</th>
                   <th className="px-5 py-4">Details</th>
@@ -120,6 +121,25 @@ export default async function PlatformPage() {
                       ) : (
                         <span className="text-slate-400">
                           Not connected
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-5 py-4">
+                      {!tenant.stripeAccountId ? (
+                        <span className="text-slate-500">
+                          Not Connected
+                        </span>
+                      ) : tenant.stripeOnboardingOperation?.status === "REVIEW_REQUIRED" ? (
+                        <span className="font-medium text-amber-700">
+                          Manual Review
+                        </span>
+                      ) : tenant.stripeChargesEnabled && tenant.stripePayoutsEnabled ? (
+                        <span className="font-medium text-green-700">
+                          Ready
+                        </span>
+                      ) : (
+                        <span className="font-medium text-amber-700">
+                          Connected — Action Needed
                         </span>
                       )}
                     </td>
@@ -162,7 +182,7 @@ export default async function PlatformPage() {
 
                 {tenants.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="px-5 py-10 text-center text-slate-500">
+                    <td colSpan={9} className="px-5 py-10 text-center text-slate-500">
                       No active restaurant tenants found.
                     </td>
                   </tr>
