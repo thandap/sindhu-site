@@ -1,3 +1,5 @@
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { OrderStatus, FulfillmentType, PaymentStatus } from "@/lib/generated/prisma/client";
@@ -28,9 +30,19 @@ function mapOrder(order: any) {
   };
 }
 
+
 export async function GET(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+
     const tenantSlug = request.nextUrl.searchParams.get("tenant");
+
+    if (!session?.user?.email || !session.user.tenantSlug) {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
 
     if (!tenantSlug) {
       return NextResponse.json(
@@ -39,11 +51,38 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const orders = await prisma.order.findMany({
+    // Prevent an administrator from accessing another restaurant.
+    if (session.user.tenantSlug !== tenantSlug) {
+      return NextResponse.json(
+        { success: false, message: "Access denied" },
+        { status: 403 }
+      );
+    }
+
+    const admin = await prisma.adminUser.findFirst({
       where: {
+        email: session.user.email,
+        isActive: true,
         tenant: {
           slug: tenantSlug,
+          isActive: true,
         },
+      },
+      select: {
+        tenantId: true,
+      },
+    });
+
+    if (!admin) {
+      return NextResponse.json(
+        { success: false, message: "Administrator not authorized" },
+        { status: 403 }
+      );
+    }
+
+    const orders = await prisma.order.findMany({
+      where: {
+        tenantId: admin.tenantId,
       },
       include: {
         items: true,
@@ -60,12 +99,14 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("GET /api/orders failed:", error);
+
     return NextResponse.json(
       { success: false, message: "Failed to load orders" },
       { status: 500 }
     );
   }
 }
+
 
 export async function POST(request: NextRequest) {
   try {
