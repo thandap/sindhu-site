@@ -100,9 +100,16 @@ export async function POST(request: NextRequest) {
     }
 
     // 5. Retrieve authoritative Accounts v2 status
-    const account = await stripeV2.v2.core.accounts.retrieve(
-      tenant.stripeAccountId
-    );
+   const account = await stripeV2.v2.core.accounts.retrieve(
+  tenant.stripeAccountId,
+  {
+    include: [
+      "configuration.merchant",
+      "configuration.recipient",
+      "requirements",
+    ],
+  }
+);
 
     // Verify account ownership before modifying the tenant.
     if (
