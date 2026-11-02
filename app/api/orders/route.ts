@@ -201,19 +201,64 @@ export async function POST(request: NextRequest) {
   }
 }
 
+
 export async function PATCH(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.email || !session.user.tenantSlug) {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { id, status, tenantSlug } = body;
 
-    if (!id || !status || !tenantSlug) {
+    if (
+      typeof id !== "string" ||
+      !id.trim() ||
+      typeof status !== "string" ||
+      typeof tenantSlug !== "string" ||
+      !tenantSlug.trim()
+    ) {
       return NextResponse.json(
-        { success: false, message: "Missing id, status, or tenantSlug" },
+        { success: false, message: "Missing or invalid order fields" },
         { status: 400 }
       );
     }
 
-    const normalizedStatus = String(status).toLowerCase();
+    // An administrator can manage only their own restaurant.
+    if (session.user.tenantSlug !== tenantSlug) {
+      return NextResponse.json(
+        { success: false, message: "Access denied" },
+        { status: 403 }
+      );
+    }
+
+    const admin = await prisma.adminUser.findFirst({
+      where: {
+        email: session.user.email,
+        isActive: true,
+        tenant: {
+          slug: tenantSlug,
+          isActive: true,
+        },
+      },
+      select: {
+        tenantId: true,
+      },
+    });
+
+    if (!admin) {
+      return NextResponse.json(
+        { success: false, message: "Administrator not authorized" },
+        { status: 403 }
+      );
+    }
+
+    const normalizedStatus = status.toLowerCase();
 
     if (!ALLOWED_STATUSES.includes(normalizedStatus as AllowedStatus)) {
       return NextResponse.json(
@@ -222,20 +267,22 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const prismaStatus = normalizedStatus.toUpperCase() as keyof typeof OrderStatus;
+    const prismaStatus =
+      normalizedStatus.toUpperCase() as keyof typeof OrderStatus;
 
     const existing = await prisma.order.findFirst({
       where: {
         orderNumber: id,
-        tenant: {
-          slug: tenantSlug,
-        },
+        tenantId: admin.tenantId,
+      },
+      select: {
+        id: true,
       },
     });
 
     if (!existing) {
       return NextResponse.json(
-        { success: false, message: "Order not found for this tenant" },
+        { success: false, message: "Order not found" },
         { status: 404 }
       );
     }
@@ -245,9 +292,9 @@ export async function PATCH(request: NextRequest) {
       data: {
         status: OrderStatus[prismaStatus],
       },
-      include: {
-        items: true,
-        tenant: true,
+      select: {
+        orderNumber: true,
+        status: true,
       },
     });
 
@@ -260,6 +307,7 @@ export async function PATCH(request: NextRequest) {
     });
   } catch (error) {
     console.error("PATCH /api/orders failed:", error);
+
     return NextResponse.json(
       { success: false, message: "Failed to update order status" },
       { status: 500 }
