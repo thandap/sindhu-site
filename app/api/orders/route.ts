@@ -18,6 +18,7 @@ function mapOrder(order: any) {
     notes: order.notes,
     total: order.totalCents / 100,
     status: order.status.toLowerCase(),
+    paymentStatus: order.paymentStatus.toLowerCase(),
     createdAt: order.createdAt,
     items: order.items.map((item: any) => ({
       id: item.id,
@@ -277,6 +278,7 @@ export async function PATCH(request: NextRequest) {
       },
       select: {
         id: true,
+        paymentStatus: true,
       },
     });
 
@@ -284,6 +286,15 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json(
         { success: false, message: "Order not found" },
         { status: 404 }
+      );
+    }
+    if (existing.paymentStatus !== PaymentStatus.PAID) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Order payment is not confirmed. Kitchen status cannot be updated.",
+        },
+        { status: 409 }
       );
     }
 

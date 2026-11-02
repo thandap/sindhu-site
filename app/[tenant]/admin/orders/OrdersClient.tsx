@@ -15,6 +15,7 @@ type OrderItem = {
 type Order = {
   id: string;
   tenantSlug: string;
+  paymentStatus: string;
   customerName: string;
   customerPhone: string;
   notes?: string;
@@ -168,6 +169,16 @@ export default function TenantAdminOrdersClient({ tenant }: Props) {
                     <p className="font-semibold text-orange-600">
                       ${order.total.toFixed(2)}
                     </p>
+                    <p
+                      className={`mt-1 text-sm font-semibold ${order.paymentStatus === "paid"
+                        ? "text-green-600"
+                        : order.paymentStatus === "pending"
+                          ? "text-amber-600"
+                          : "text-red-600"
+                        }`}
+                    >
+                      Payment: {order.paymentStatus.toUpperCase()}
+                    </p>
                     <span
                       className={`px-3 py-1 text-sm rounded-full ${statusColor(
                         order.status
@@ -200,21 +211,29 @@ export default function TenantAdminOrdersClient({ tenant }: Props) {
                 </div>
 
                 {/* ACTIONS */}
-                <div className="mt-4 flex gap-2 flex-wrap">
-                  {["confirmed", "preparing", "ready", "completed"].map(
-                    (status) => (
-                      <button
-                        key={status}
-                        onClick={() =>
-                          changeStatus(order.id, status as OrderStatus)
-                        }
-                        className="border px-3 py-1 rounded-full text-sm hover:bg-gray-100"
-                      >
-                        {status}
-                      </button>
-                    )
-                  )}
-                </div>
+                {order.paymentStatus !== "paid" ? (
+                  <div className="mt-4">
+                    <p className="text-sm font-medium text-amber-700">
+                      Awaiting Payment — Kitchen actions unavailable
+                    </p>
+                  </div>
+                ) : (
+                  <div className="mt-4 flex gap-2 flex-wrap">
+                    {["confirmed", "preparing", "ready", "completed"].map(
+                      (status) => (
+                        <button
+                          key={status}
+                          onClick={() =>
+                            changeStatus(order.id, status as OrderStatus)
+                          }
+                          className="border px-3 py-1 rounded-full text-sm hover:bg-gray-100"
+                        >
+                          {status}
+                        </button>
+                      )
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
