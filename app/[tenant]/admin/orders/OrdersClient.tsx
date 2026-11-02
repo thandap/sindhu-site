@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type OrderStatus = "new" | "confirmed" | "preparing" | "ready" | "completed";
 
@@ -38,14 +38,49 @@ export default function TenantAdminOrdersClient({ tenant }: Props) {
     OrderStatus | "all" | "awaiting-payment"
   >("all");
 
+  const [newPaidOrderCount, setNewPaidOrderCount] = useState(0);
+
+  const previousOrdersRef = useRef<Map<string, string> | null>(null);
+
   async function loadOrders() {
     try {
       const res = await fetch(`/api/orders?tenant=${tenantSlug}`, {
         cache: "no-store",
       });
 
+      if (!res.ok) {
+        throw new Error(`Failed to load orders: ${res.status}`);
+      }
+
       const data = await res.json();
-      setOrders(data.orders || []);
+      const latestOrders: Order[] = data.orders || [];
+
+      const previousOrders = previousOrdersRef.current;
+
+      if (previousOrders !== null) {
+        const newlyPaidOrders = latestOrders.filter((order) => {
+          if (order.paymentStatus !== "paid" || order.status !== "new") {
+            return false;
+          }
+
+          const previousPaymentStatus = previousOrders.get(order.id);
+
+          return (
+            previousPaymentStatus === undefined ||
+            previousPaymentStatus !== "paid"
+          );
+        });
+
+        if (newlyPaidOrders.length > 0) {
+          setNewPaidOrderCount((current) => current + newlyPaidOrders.length);
+        }
+      }
+
+      previousOrdersRef.current = new Map(
+        latestOrders.map((order) => [order.id, order.paymentStatus])
+      );
+
+      setOrders(latestOrders);
     } catch (error) {
       console.error("Failed to load orders", error);
     } finally {
@@ -81,11 +116,14 @@ export default function TenantAdminOrdersClient({ tenant }: Props) {
   }
 
   useEffect(() => {
+    previousOrdersRef.current = null;
+    setNewPaidOrderCount(0);
+
     loadOrders();
 
     const interval = setInterval(() => {
       loadOrders();
-    }, 20000); // auto refresh every 20 sec
+    }, 20000);
 
     return () => clearInterval(interval);
   }, [tenantSlug]);
@@ -149,6 +187,35 @@ export default function TenantAdminOrdersClient({ tenant }: Props) {
     <main className="min-h-screen bg-white px-6 py-10 text-slate-900">
       <div className="mx-auto max-w-6xl">
         <h1 className="text-3xl font-bold mb-2">Admin Orders</h1>
+
+        {newPaidOrderCount > 0 && (
+          <div
+            role="status"
+            className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-green-300 bg-green-50 p-4 text-green-900"
+          >
+            <div>
+              <p className="font-bold">
+                New Paid Order Received!
+              </p>
+              <p className="text-sm">
+                {newPaidOrderCount} new paid{" "}
+                {newPaidOrderCount === 1 ? "order" : "orders"} received.
+                Check the New orders filter.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setFilter("new");
+                setNewPaidOrderCount(0);
+              }}
+              className="rounded-lg bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-800"
+            >
+              View New Orders
+            </button>
+          </div>
+        )}
 
         {/* STATUS SUMMARY */}
         <div className="flex gap-4 mb-6 text-sm">
