@@ -378,8 +378,8 @@ export async function POST(request: NextRequest) {
         const session = await stripe.checkout.sessions.create({
             mode: "payment",
             line_items: lineItems,
-            success_url: `${baseUrl}/${tenant.slug}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${baseUrl}/${tenant.slug}/checkout/cancel`,
+            success_url: `${baseUrl}/${tenant.slug}/order-success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${baseUrl}/${tenant.slug}/cart`,
             client_reference_id: order.id,
             metadata: {
                 tenantId: tenant.id,
