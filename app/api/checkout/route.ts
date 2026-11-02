@@ -317,27 +317,27 @@ export async function POST(request: NextRequest) {
             quantity: item.quantity,
         }));
 
-        if (Number(deliveryFeeCents) > 0) {
+        if (validatedDeliveryFeeCents > 0) {
             lineItems.push({
                 price_data: {
                     currency: "usd",
                     product_data: {
                         name: "Delivery Fee",
                     },
-                    unit_amount: Number(deliveryFeeCents),
+                    unit_amount: validatedDeliveryFeeCents,
                 },
                 quantity: 1,
             });
         }
 
-        if (Number(gratuityCents) > 0) {
+        if (validatedGratuityCents > 0) {
             lineItems.push({
                 price_data: {
                     currency: "usd",
                     product_data: {
                         name: "Gratuity",
                     },
-                    unit_amount: Number(gratuityCents),
+                    unit_amount: validatedGratuityCents,
                 },
                 quantity: 1,
             });
