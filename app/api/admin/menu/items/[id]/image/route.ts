@@ -237,7 +237,21 @@ export async function DELETE(_request: Request, { params }: Context) {
         `https://res.cloudinary.com/` +
         `${process.env.CLOUDINARY_CLOUD_NAME}/image/upload/`;
 
-      if (auth.item.image.startsWith(managedPrefix)) {
+      const encodedPublicId = publicId
+        .split("/")
+        .map(encodeURIComponent)
+        .join("/");
+
+      const imagePath = auth.item.image.startsWith(managedPrefix)
+        ? auth.item.image.slice(managedPrefix.length)
+        : "";
+
+      const isOwnManagedImage =
+        imagePath.startsWith(`${encodedPublicId}.`) ||
+        /^v\d+\//.test(imagePath) &&
+        imagePath.replace(/^v\d+\//, "").startsWith(`${encodedPublicId}.`);
+
+      if (isOwnManagedImage) {
         const result = await cloudinary.uploader.destroy(publicId, {
           resource_type: "image",
           invalidate: true,

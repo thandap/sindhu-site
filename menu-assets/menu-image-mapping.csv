@@ -1,0 +1,7 @@
+dish_name,menu_slug,image_path,proposed_description,review_status
+Chicken Tikka Boti,chicken-tikka-boti-ffztyz22bjxjj,/images/menu/chicken-tikka-boti.webp,Tender boneless chicken pieces marinated in aromatic spices and grilled until smoky and juicy.,NEEDS_RESTAURANT_APPROVAL
+Lamb Seekh Kabab,lamb-seekh-kabab-1tgn3hqwdfs1w,/images/menu/lamb-seekh-kabab.webp,"Seasoned minced lamb shaped onto skewers and grilled for a rich, smoky flavor.",NEEDS_RESTAURANT_APPROVAL
+Big Samosa,big-samosa-ngcxf0rcmbc62,/images/menu/big-samosa.webp,"Golden, crispy pastry filled with a savory mixture of spiced potatoes and peas.",NEEDS_RESTAURANT_APPROVAL
+Butter Chicken,butter-chicken,/images/menu/butter-chicken.webp,"Tender chicken simmered in a rich, buttery tomato sauce with aromatic spices.",NEEDS_RESTAURANT_APPROVAL
+Chicken Tikka Masala,chicken-tikka-masala-tgamw6520qnp8,/images/menu/chicken-tikka-masala.webp,"Grilled chicken pieces in a creamy, flavorful tomato-based masala sauce.",NEEDS_RESTAURANT_APPROVAL
+Chicken Kadai,chicken-kadai-fnyvpx9cjmt8p,/images/menu/chicken-kadai.webp,"Chicken cooked with bell peppers, onions, tomatoes, and fragrant spices in a kadai-style sauce.",NEEDS_RESTAURANT_APPROVAL

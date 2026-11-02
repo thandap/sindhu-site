@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCartStore } from "@/lib/cart/cartStore";
 
 type MenuItem = {
+  id: string;
   name: string;
   desc: string;
   priceCents: number;
@@ -24,11 +25,6 @@ type Props = {
   tenantSubtitle?: string;
 };
 
-function makeItemId(category: string, itemName: string) {
-  return `${category.toLowerCase().replace(/[^a-z0-9]+/g, "-")}__${itemName
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")}`;
-}
 
 export default function TenantMenuClient({
   tenantSlug,
@@ -50,6 +46,7 @@ export default function TenantMenuClient({
           data.menu.map((cat: any) => ({
             category: cat.name,
             items: cat.items.map((item: any) => ({
+              id: item.id,
               name: item.name,
               desc: item.description ?? "",
               priceCents: item.priceCents,
@@ -102,7 +99,7 @@ export default function TenantMenuClient({
 
               <div className="space-y-4">
                 {section.items.map((item) => {
-                  const itemId = makeItemId(section.category, item.name);
+                  const itemId = item.id;
 
                   return (
                     <div key={itemId} className="border-b pb-4">

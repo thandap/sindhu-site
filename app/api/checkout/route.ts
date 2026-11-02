@@ -56,24 +56,175 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        if (!tenant.stripeAccountId) {
+
+        const tenantConfig = (tenant.config ?? {}) as any;
+        const fulfillmentConfig = tenantConfig.fulfillment ?? {};
+
+        const selectedFulfillment = String(fulfillmentType).toUpperCase();
+
+        // Validate fulfillment type
+        if (
+            selectedFulfillment !== "PICKUP" &&
+            selectedFulfillment !== "DELIVERY"
+        ) {
             return NextResponse.json(
-                { success: false, message: "Tenant Stripe account not connected" },
+                {
+                    success: false,
+                    message: "Invalid fulfillment type",
+                },
                 { status: 400 }
             );
         }
 
-        const sanitizedItems: {
-            name: string;
-            priceCents: number;
-            desc: string;
+        // Check tenant fulfillment settings
+        if (
+            (selectedFulfillment === "PICKUP" &&
+                fulfillmentConfig.pickupEnabled !== true) ||
+            (selectedFulfillment === "DELIVERY" &&
+                fulfillmentConfig.deliveryEnabled !== true)
+        ) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "Fulfillment option is not available for this restaurant",
+                },
+                { status: 400 }
+            );
+        }
+
+        // Elite Caters delivery requires server-side fee calculation.
+        // Keep delivery payments disabled until implemented.
+        if (selectedFulfillment === "DELIVERY") {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message:
+                        "Delivery checkout is being configured. Please contact the restaurant for a delivery quote.",
+                },
+                { status: 400 }
+            );
+        }
+
+        // Verify Stripe connection
+        if (!tenant.stripeAccountId) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "Tenant Stripe account not connected",
+                },
+                { status: 400 }
+            );
+        }
+
+        // Server-controlled amounts for current pickup checkout
+        const validatedDeliveryFeeCents = 0;
+        const validatedGratuityCents = 0;
+
+        // Tenant tax configuration
+        const taxRate = Number(tenantConfig.taxRate ?? 0.06);
+
+
+
+        if (String(fulfillmentType).toUpperCase() !== "PICKUP") {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "Only pickup orders are currently supported",
+                },
+                { status: 400 }
+            );
+        }
+
+        type CheckoutCartItem = {
+            id: string;
             quantity: number;
-        }[] = (items as IncomingItem[]).map((item: IncomingItem) => ({
-            name: item.name,
-            priceCents: item.priceCents,
-            desc: item.desc || "",
-            quantity: Number(item.quantity) || 1,
-        }));
+        };
+
+        // Validate the incoming cart.
+        if (!Array.isArray(items) || items.length === 0) {
+            return NextResponse.json(
+                { success: false, message: "Cart is empty" },
+                { status: 400 }
+            );
+        }
+
+        const requestedItems = items as CheckoutCartItem[];
+
+        if (
+            requestedItems.length > 100 ||
+            requestedItems.some(
+                (item) =>
+                    !item ||
+                    typeof item.id !== "string" ||
+                    !item.id.trim() ||
+                    !Number.isSafeInteger(item.quantity) ||
+                    item.quantity < 1 ||
+                    item.quantity > 50
+            )
+        ) {
+            return NextResponse.json(
+                { success: false, message: "Invalid cart items or quantities" },
+                { status: 400 }
+            );
+        }
+
+        const requestedIds = requestedItems.map((item) => item.id);
+
+        if (new Set(requestedIds).size !== requestedIds.length) {
+            return NextResponse.json(
+                { success: false, message: "Duplicate cart item IDs" },
+                { status: 400 }
+            );
+        }
+
+        // Fetch authoritative prices from PostgreSQL.
+        const dbItems = await prisma.menuItem.findMany({
+            where: {
+                tenantId: tenant.id,
+                id: { in: requestedIds },
+                isActive: true,
+                isAvailable: true,
+                category: {
+                    isActive: true,
+                },
+            },
+            select: {
+                id: true,
+                name: true,
+                description: true,
+                priceCents: true,
+            },
+        });
+
+        if (dbItems.length !== requestedIds.length) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message:
+                        "One or more dishes are unavailable. Please refresh the menu.",
+                },
+                { status: 400 }
+            );
+        }
+
+        const dbItemMap = new Map(
+            dbItems.map((item) => [item.id, item])
+        );
+
+        const sanitizedItems = requestedItems.map((requested) => {
+            const dbItem = dbItemMap.get(requested.id)!;
+
+            return {
+                name: dbItem.name,
+                priceCents: dbItem.priceCents,
+                desc: dbItem.description ?? "",
+                quantity: requested.quantity,
+                metadata: {
+                    menuItemId: dbItem.id,
+                },
+            };
+        });
+
 
         const subtotalCents = sanitizedItems.reduce(
             (sum: number, item: { priceCents: number; quantity: number }) =>
@@ -81,14 +232,13 @@ export async function POST(request: NextRequest) {
             0
         );
 
-        const tenantConfig = (tenant.config ?? {}) as any;
-        const taxRate = Number(tenantConfig.taxRate ?? 0.06);
+
         const taxCents = Math.round(subtotalCents * taxRate);
 
         const totalCents =
             subtotalCents +
-            Number(deliveryFeeCents || 0) +
-            Number(gratuityCents || 0) +
+            validatedDeliveryFeeCents +
+            validatedGratuityCents +
             taxCents;
 
         const platformFeeBps = tenant.platformFeeBps ?? 300;
@@ -106,10 +256,7 @@ export async function POST(request: NextRequest) {
                 customerPhone,
                 customerEmail: customerEmail || null,
                 notes: notes || "",
-                fulfillmentType:
-                    FulfillmentType[
-                    String(fulfillmentType).toUpperCase() as keyof typeof FulfillmentType
-                    ] || FulfillmentType.PICKUP,
+                fulfillmentType: selectedFulfillment as FulfillmentType,
                 addressLine1: addressLine1 || null,
                 addressLine2: addressLine2 || null,
                 city: city || null,
@@ -118,8 +265,8 @@ export async function POST(request: NextRequest) {
                 requestedDate: requestedDate ? new Date(requestedDate) : null,
                 requestedTimeLabel: requestedTimeLabel || null,
                 subtotalCents,
-                deliveryFeeCents: Number(deliveryFeeCents || 0),
-                gratuityCents: Number(gratuityCents || 0),
+                deliveryFeeCents: validatedDeliveryFeeCents,
+                gratuityCents: validatedGratuityCents,
                 taxCents,
                 totalCents,
                 status: OrderStatus.NEW,
@@ -146,36 +293,36 @@ export async function POST(request: NextRequest) {
             },
         });
 
- type CheckoutLineItem = {
-  price_data: {
-    currency: string;
-    product_data: {
-      name: string;
-      description?: string;
-    };
-    unit_amount: number;
-  };
-  quantity: number;
-};
+        type CheckoutLineItem = {
+            price_data: {
+                currency: string;
+                product_data: {
+                    name: string;
+                    description?: string;
+                };
+                unit_amount: number;
+            };
+            quantity: number;
+        };
 
-const lineItems: CheckoutLineItem[] = sanitizedItems.map((item) => ({
-  price_data: {
-    currency: "usd",
-    product_data: {
-      name: item.name,
-      ...(item.desc?.trim() ? { description: item.desc.trim() } : {}),
-    },
-    unit_amount: item.priceCents,
-  },
-  quantity: item.quantity,
-}));
+        const lineItems: CheckoutLineItem[] = sanitizedItems.map((item) => ({
+            price_data: {
+                currency: "usd",
+                product_data: {
+                    name: item.name,
+                    ...(item.desc?.trim() ? { description: item.desc.trim() } : {}),
+                },
+                unit_amount: item.priceCents,
+            },
+            quantity: item.quantity,
+        }));
 
         if (Number(deliveryFeeCents) > 0) {
             lineItems.push({
                 price_data: {
                     currency: "usd",
                     product_data: {
-                        name: "Delivery Fee",                        
+                        name: "Delivery Fee",
                     },
                     unit_amount: Number(deliveryFeeCents),
                 },
@@ -189,7 +336,7 @@ const lineItems: CheckoutLineItem[] = sanitizedItems.map((item) => ({
                     currency: "usd",
                     product_data: {
                         name: "Gratuity",
-                       },
+                    },
                     unit_amount: Number(gratuityCents),
                 },
                 quantity: 1,
@@ -202,7 +349,7 @@ const lineItems: CheckoutLineItem[] = sanitizedItems.map((item) => ({
                     currency: "usd",
                     product_data: {
                         name: "Sales Tax",
-                          },
+                    },
                     unit_amount: taxCents,
                 },
                 quantity: 1,

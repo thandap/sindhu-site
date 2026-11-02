@@ -81,9 +81,14 @@ export default function Home() {
             <div className="rounded-2xl bg-white p-6 shadow-md">
               <h3 className="text-xl font-semibold">East Side — East Lansing</h3>
 
-              <summary className="cursor-pointer list-none rounded-full bg-orange-600 px-6 py-3 text-center font-semibold text-white transition hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-700 [&::-webkit-details-marker]:hidden">
+              <a
+                href="https://sindhu-indian-east-lansing.cloveronline.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-5 block rounded-full bg-orange-600 px-6 py-3 text-center font-semibold text-white transition hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-700"
+              >
                 East
-              </summary>
+              </a>
               <div className="mt-5 rounded-xl border border-orange-200 bg-orange-50 p-5">
                 <p className="font-semibold text-slate-900">
                   We are moving from Hannah Plaza to Hannah Lofts,
@@ -106,15 +111,6 @@ export default function Home() {
                 <p className="mt-2 text-sm text-slate-600">
                   Next to Hannah Convenience Store, across from MAC.
                 </p>
-
-                <a
-                  href="https://sindhu-indian-east-lansing.cloveronline.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-4 inline-block font-semibold text-orange-700 hover:underline"
-                >
-                  Until we open, please visit our West Side location →
-                </a>
 
                 <p className="mt-4 font-bold text-orange-700">
                   East or West — Sindhu is the Best!
