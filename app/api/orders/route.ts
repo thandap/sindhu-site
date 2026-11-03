@@ -279,6 +279,7 @@ export async function PATCH(request: NextRequest) {
       select: {
         id: true,
         paymentStatus: true,
+        status: true,
       },
     });
 
@@ -297,23 +298,52 @@ export async function PATCH(request: NextRequest) {
         { status: 409 }
       );
     }
+    const allowedTransitions: Partial<Record<OrderStatus, OrderStatus>> = {
+      [OrderStatus.NEW]: OrderStatus.CONFIRMED,
+      [OrderStatus.CONFIRMED]: OrderStatus.PREPARING,
+      [OrderStatus.PREPARING]: OrderStatus.READY,
+      [OrderStatus.READY]: OrderStatus.COMPLETED,
+    };
 
-    const updated = await prisma.order.update({
-      where: { id: existing.id },
-      data: {
-        status: OrderStatus[prismaStatus],
+    const requestedStatus = OrderStatus[prismaStatus];
+
+    if (allowedTransitions[existing.status] !== requestedStatus) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `Cannot change order from ${existing.status} to ${requestedStatus}`,
+        },
+        { status: 409 }
+      );
+    }
+
+    const result = await prisma.order.updateMany({
+      where: {
+        id: existing.id,
+        tenantId: admin.tenantId,
+        paymentStatus: PaymentStatus.PAID,
+        status: existing.status,
       },
-      select: {
-        orderNumber: true,
-        status: true,
+      data: {
+        status: requestedStatus,
       },
     });
+
+    if (result.count !== 1) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Order status changed. Please refresh and try again.",
+        },
+        { status: 409 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
       order: {
-        id: updated.orderNumber,
-        status: updated.status.toLowerCase(),
+        id,
+        status: requestedStatus.toLowerCase(),
       },
     });
   } catch (error) {

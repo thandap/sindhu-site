@@ -318,19 +318,48 @@ export default function TenantAdminOrdersClient({ tenant }: Props) {
                   </div>
                 ) : (
                   <div className="mt-4 flex gap-2 flex-wrap">
-                    {["confirmed", "preparing", "ready", "completed"].map(
-                      (status) => (
+                    {(() => {
+                      const nextAction: Partial<
+                        Record<OrderStatus, { status: OrderStatus; label: string }>
+                      > = {
+                        new: {
+                          status: "confirmed",
+                          label: "Confirm Order",
+                        },
+                        confirmed: {
+                          status: "preparing",
+                          label: "Start Preparing",
+                        },
+                        preparing: {
+                          status: "ready",
+                          label: "Mark Ready",
+                        },
+                        ready: {
+                          status: "completed",
+                          label: "Complete Order",
+                        },
+                      };
+
+                      const action = nextAction[order.status];
+
+                      if (!action) {
+                        return (
+                          <span className="text-sm font-medium text-green-700">
+                            Order Completed
+                          </span>
+                        );
+                      }
+
+                      return (
                         <button
-                          key={status}
-                          onClick={() =>
-                            changeStatus(order.id, status as OrderStatus)
-                          }
-                          className="border px-3 py-1 rounded-full text-sm hover:bg-gray-100"
+                          type="button"
+                          onClick={() => changeStatus(order.id, action.status)}
+                          className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-700"
                         >
-                          {status}
+                          {action.label}
                         </button>
-                      )
-                    )}
+                      );
+                    })()}
                   </div>
                 )}
               </div>
