@@ -22,12 +22,12 @@ export default function ContactPage() {
             </address>
 
             <a
-              href="https://sindhu-indian-west.cloveronline.com/"
+              href="https://sindhu-indian-east-lansing.cloveronline.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-5 inline-block font-semibold text-orange-700 hover:underline"
+              className="mt-6 inline-block rounded-full bg-orange-600 px-6 py-3 font-semibold text-white transition hover:bg-orange-700"
             >
-              Until we open, please visit our West Side location →
+              Order Online — East
             </a>
           </section>
 
