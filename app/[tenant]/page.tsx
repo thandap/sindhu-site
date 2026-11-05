@@ -86,8 +86,7 @@ export default function Home() {
               </summary>
               <div className="mt-5 rounded-xl border border-orange-200 bg-orange-50 p-5">
                 <p className="font-semibold text-slate-900">
-                  We are moving from Hannah Plaza to Hannah Lofts,
-                  just a couple of blocks from Hannah Plaza!
+                  Our East Lansing location is now open at Hannah Lofts!
                 </p>
 
                 <address className="mt-5 not-italic leading-7 text-slate-700">

@@ -13,8 +13,7 @@ export default function ContactPage() {
             </h2>
 
             <p className="mt-5 font-semibold">
-              We are moving from Hannah Plaza to Hannah Lofts,
-              just a couple of blocks from Hannah Plaza!
+              Our East Lansing location is now open at Hannah Lofts!
             </p>
 
             <address className="mt-4 not-italic text-lg leading-8">
